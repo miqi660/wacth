@@ -1,0 +1,51 @@
+{
+  "before": {
+    "path": "C:\\Users\\Administrator\\Desktop\\wacth\\Ultra3-Reverse_Updated_2026-07-13\\editor\\samples\\stage7a2_diy_root_capture\\A0_repeat_1\\reconstructed.bin",
+    "size": 351617,
+    "sha256": "9305529D6C644C757F6B193671B84153F0ADEBE385E7B3B30552E9BC23513635",
+    "header_hex": "000000FFFFFF00",
+    "footer_hex": "00000000",
+    "header_ascii": "\u0000\u0000\u0000���\u0000",
+    "header_valid": false,
+    "footer_valid": false,
+    "valid": false
+  },
+  "after": {
+    "path": "C:\\Users\\Administrator\\Desktop\\wacth\\Ultra3-Reverse_Updated_2026-07-13\\editor\\samples\\stage7a2_diy_root_capture\\P1_time_bottom\\reconstructed.bin",
+    "size": 351617,
+    "sha256": "3B8302F6746AB2B78FA48599328DB7907788FA322D18ADF297280C8A5D3370C0",
+    "header_hex": "010000FFFFFF00",
+    "footer_hex": "00000000",
+    "header_ascii": "\u0001\u0000\u0000���\u0000",
+    "header_valid": false,
+    "footer_valid": false,
+    "valid": false
+  },
+  "same_size": true,
+  "changed_byte_count": 1,
+  "unchanged_byte_count": 351616,
+  "changed_percentage": 0.0002844003560692458,
+  "range_count": 1,
+  "first_difference": 0,
+  "first_difference_hex": "0x00000000",
+  "last_difference": 0,
+  "last_difference_hex": "0x00000000",
+  "ranges": [
+    {
+      "start": 0,
+      "start_hex": "0x00000000",
+      "end": 0,
+      "end_hex": "0x00000000",
+      "length": 1,
+      "before_hex": "00",
+      "after_hex": "01",
+      "context_start": 0,
+      "context_start_hex": "0x00000000",
+      "context_end": 64,
+      "context_end_hex": "0x00000040",
+      "before_context_hex": "000000FFFFFF000080014001FC00D20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+      "after_context_hex": "010000FFFFFF000080014001FC00D20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "known_patch_verified": false
+}
