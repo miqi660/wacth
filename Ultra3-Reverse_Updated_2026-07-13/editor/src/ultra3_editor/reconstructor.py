@@ -7,12 +7,14 @@ from pathlib import Path
 from .bcsdial import BCSDIAL_FOOTER, BCSDIAL_HEADER
 from .c9_protocol import C9_DATA_SIZE, packet_count_for_size, parse_c8, parse_c9
 from .capture_reader import read_capture
-from .errors import FrameValidationError, SessionSelectionError
+from .errors import FrameValidationError, ReconstructionError, SessionSelectionError
 from .models import (
     CaptureRecord,
+    ContainerKind,
     ParsedCapture,
     ReconstructionResult,
     UploadSession,
+    ValidationCheck,
 )
 
 CA_APPLY_FRAME = bytes.fromhex("BCCA02010505")
@@ -23,27 +25,59 @@ def reconstruct_capture(
     *,
     capture_format: str = "auto",
     session_index: int | None = None,
+    container: ContainerKind | str = ContainerKind.BCSDIAL,
 ) -> ReconstructionResult:
+    container_kind = _container_kind(container)
     capture = read_capture(path, capture_format=capture_format)
-    sessions = locate_upload_sessions(capture)
+    sessions = locate_upload_sessions(capture, container=container_kind)
     selected = select_session(sessions, session_index=session_index)
     data = selected.reconstructed_data
+    digest = hashlib.sha256(data).hexdigest().upper() if data else None
+    size_valid = bool(
+        selected.c8_packet
+        and len(data) == selected.c8_packet.declared_size
+    )
+    header_observed = data[: len(BCSDIAL_HEADER)].hex().upper()
+    footer_observed = data[-len(BCSDIAL_FOOTER) :].hex().upper() if data else ""
+    if container_kind is ContainerKind.BCSDIAL:
+        header_valid: bool | None = data.startswith(BCSDIAL_HEADER)
+        footer_valid: bool | None = data.endswith(BCSDIAL_FOOTER)
+        header_check = ValidationCheck.PASSED if header_valid else ValidationCheck.FAILED
+        footer_check = ValidationCheck.PASSED if footer_valid else ValidationCheck.FAILED
+        container_validation_passed = bool(size_valid and header_valid and footer_valid)
+    else:
+        header_valid = None
+        footer_valid = None
+        header_check = ValidationCheck.NOT_REQUIRED
+        footer_check = ValidationCheck.NOT_REQUIRED
+        container_validation_passed = size_valid
     return ReconstructionResult(
         capture=capture,
         sessions=sessions,
         selected_session=selected,
+        container=container_kind,
         status="COMPLETE" if selected.complete else "FAILED",
+        container_validation_passed=container_validation_passed,
         reconstructed_size=len(data),
-        reconstructed_sha256=(
-            hashlib.sha256(data).hexdigest().upper() if data else None
-        ),
-        header_valid=data.startswith(BCSDIAL_HEADER),
-        footer_valid=data.endswith(BCSDIAL_FOOTER),
+        reconstructed_sha256=digest,
+        raw_data_size=len(data),
+        raw_data_sha256=digest,
+        transformation="none",
+        header_check=header_check,
+        footer_check=footer_check,
+        header_observed_hex=header_observed,
+        footer_observed_hex=footer_observed,
+        header_valid=header_valid,
+        footer_valid=footer_valid,
         errors=selected.errors,
     )
 
 
-def locate_upload_sessions(capture: ParsedCapture) -> tuple[UploadSession, ...]:
+def locate_upload_sessions(
+    capture: ParsedCapture,
+    *,
+    container: ContainerKind = ContainerKind.BCSDIAL,
+) -> tuple[UploadSession, ...]:
     sessions: list[UploadSession] = []
     current_c8: CaptureRecord | None = None
     current_c9: list[CaptureRecord] = []
@@ -61,6 +95,7 @@ def locate_upload_sessions(capture: ParsedCapture) -> tuple[UploadSession, ...]:
             tuple(current_c9),
             tuple(current_ca),
             end_line,
+            container,
         ))
         current_c8 = None
         current_c9 = []
@@ -133,6 +168,7 @@ def _validate_session(
     c9_records: tuple[CaptureRecord, ...],
     ca_records: tuple[CaptureRecord, ...],
     end_line: int,
+    container: ContainerKind,
 ) -> UploadSession:
     errors: list[str] = []
     c8_packet = None
@@ -206,10 +242,11 @@ def _validate_session(
             "重组大小与声明不符: "
             f"{len(reconstructed)} != {c8_packet.declared_size}"
         )
-    if reconstructed and not reconstructed.startswith(BCSDIAL_HEADER):
-        errors.append("重组文件缺失 BCSDIAL 头")
-    if reconstructed and not reconstructed.endswith(BCSDIAL_FOOTER):
-        errors.append("重组文件缺失 BCBC 尾")
+    if container is ContainerKind.BCSDIAL:
+        if reconstructed and not reconstructed.startswith(BCSDIAL_HEADER):
+            errors.append("重组文件缺失 BCSDIAL 头")
+        if reconstructed and not reconstructed.endswith(BCSDIAL_FOOTER):
+            errors.append("重组文件缺失 BCBC 尾")
     if not reconstructed:
         errors.append("会话没有可重组的 C9 DATA")
     if malformed_line is not None:
@@ -217,6 +254,7 @@ def _validate_session(
 
     return UploadSession(
         index=index,
+        container=container,
         c8_record=c8_record,
         c8_packet=c8_packet,
         c9_records=c9_records,
@@ -249,3 +287,12 @@ def _validate_data_lengths(packets, declared_size: int, errors: list[str]) -> No
             errors.append(
                 f"sequence {packet.sequence} DATA 长度 {len(packet.data)} != {expected}"
             )
+
+
+def _container_kind(value: ContainerKind | str) -> ContainerKind:
+    if isinstance(value, ContainerKind):
+        return value
+    try:
+        return ContainerKind(value)
+    except ValueError as exc:
+        raise ReconstructionError(f"不支持的 container: {value}") from exc

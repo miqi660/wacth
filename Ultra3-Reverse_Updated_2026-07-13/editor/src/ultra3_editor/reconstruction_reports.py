@@ -19,6 +19,8 @@ def reconstruction_dict(
     checksum_passed = sum(packet.checksum_valid for packet in session.c9_packets)
     return {
         "status": result.status,
+        "container": result.container.value,
+        "container_validation_passed": result.container_validation_passed,
         "source_capture": str(result.capture.info.path),
         "source_capture_sha256": result.capture.info.sha256,
         "format": result.capture.detected_format,
@@ -28,6 +30,7 @@ def reconstruction_dict(
         "c8_hex": session.c8_record.payload.hex().upper(),
         "mode": c8.mode if c8 else None,
         "declared_size": c8.declared_size if c8 else None,
+        "declared_file_size": c8.declared_size if c8 else None,
         "declared_packet_count": c8.declared_packet_count if c8 else None,
         "actual_packet_count": len(session.c9_records),
         "first_sequence": sequences[0] if sequences else None,
@@ -40,7 +43,26 @@ def reconstruction_dict(
         "out_of_order": session.out_of_order,
         "reconstructed_size": result.reconstructed_size,
         "reconstructed_sha256": result.reconstructed_sha256,
+        "raw_data_size": result.raw_data_size,
+        "raw_data_sha256": result.raw_data_sha256,
+        "transformation": result.transformation,
+        "first_packet_data_length": (
+            len(session.c9_packets[0].data) if session.c9_packets else None
+        ),
+        "last_packet_data_length": (
+            len(session.c9_packets[-1].data) if session.c9_packets else None
+        ),
         "output_path": str(output_path.resolve()) if output_path else None,
+        "header_requirement": (
+            "BCSDIAL" if result.container.value == "bcsdial" else None
+        ),
+        "footer_requirement": (
+            "BCBC" if result.container.value == "bcsdial" else None
+        ),
+        "header_check": result.header_check.value,
+        "footer_check": result.footer_check.value,
+        "header_observed_hex": result.header_observed_hex,
+        "footer_observed_hex": result.footer_observed_hex,
         "header_valid": result.header_valid,
         "footer_valid": result.footer_valid,
         "errors": list(result.errors),
@@ -75,6 +97,7 @@ def _session_dict(session: UploadSession) -> dict[str, Any]:
     sequences = [packet.sequence for packet in session.c9_packets]
     return {
         "session_index": session.index,
+        "container": session.container.value,
         "c8_hex": session.c8_record.payload.hex().upper(),
         "mode": c8.mode if c8 else None,
         "declared_file_size": c8.declared_size if c8 else None,
@@ -129,6 +152,8 @@ def write_reconstruction_markdown(
         "# Ultra3 C9 Reconstruction Report",
         "",
         f"- Status: `{data['status']}`",
+        f"- Container: `{data['container']}`",
+        f"- Container validation passed: `{data['container_validation_passed']}`",
         f"- Source capture: `{data['source_capture']}`",
         f"- Source SHA-256: `{data['source_capture_sha256']}`",
         f"- Parsing format: `{data['format']}`",
@@ -149,13 +174,22 @@ def write_reconstruction_markdown(
         f"- Duplicate sequences: `{data['duplicate_sequences']}`",
         f"- Out of order: `{data['out_of_order']}`",
         "",
-        "## Reconstructed BCSDIAL",
+        "## Reconstructed container",
         "",
         f"- Output: `{data['output_path']}`",
         f"- Size: `{data['reconstructed_size']}`",
         f"- SHA-256: `{data['reconstructed_sha256']}`",
-        f"- BCSDIAL header: `{data['header_valid']}`",
-        f"- BCBC footer: `{data['footer_valid']}`",
+        f"- Raw DATA size: `{data['raw_data_size']}`",
+        f"- Raw DATA SHA-256: `{data['raw_data_sha256']}`",
+        f"- Transformation: `{data['transformation']}`",
+        f"- First packet DATA length: `{data['first_packet_data_length']}`",
+        f"- Last packet DATA length: `{data['last_packet_data_length']}`",
+        f"- Header requirement: `{data['header_requirement']}`",
+        f"- Footer requirement: `{data['footer_requirement']}`",
+        f"- Header check: `{data['header_check']}`",
+        f"- Footer check: `{data['footer_check']}`",
+        f"- Header observed HEX: `{data['header_observed_hex']}`",
+        f"- Footer observed HEX: `{data['footer_observed_hex']}`",
         "",
         "## Capture parsing statistics",
         "",

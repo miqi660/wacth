@@ -10,6 +10,7 @@ from .errors import EditorError
 from .hexdump import format_hexdump, hex_bytes
 from .inspector import inspect_bcsdial
 from .known_patch import verify_known_patch
+from .models import ContainerKind
 from .ranges import parse_offset
 from .capture_reader import CAPTURE_FORMATS
 from .reconstruction_reports import (
@@ -58,9 +59,27 @@ def make_parser() -> argparse.ArgumentParser:
         default="auto",
     )
     reconstruct_parser.add_argument("--session-index", type=int)
+    reconstruct_parser.add_argument(
+        "--container",
+        choices=[kind.value for kind in ContainerKind],
+        default=ContainerKind.BCSDIAL.value,
+    )
     reconstruct_parser.add_argument("--output", type=Path)
     reconstruct_parser.add_argument("--json", type=Path)
     reconstruct_parser.add_argument("--report", type=Path)
+
+    static_parser = commands.add_parser("reconstruct-static-diy")
+    static_parser.add_argument("capture_file")
+    static_parser.add_argument(
+        "--format",
+        choices=CAPTURE_FORMATS,
+        default="auto",
+    )
+    static_parser.add_argument("--session-index", type=int)
+    static_parser.add_argument("--output", type=Path)
+    static_parser.add_argument("--json", type=Path)
+    static_parser.add_argument("--report", type=Path)
+    static_parser.set_defaults(container=ContainerKind.GREENLION_STATIC.value)
     return parser
 
 
@@ -157,6 +176,7 @@ def _reconstruct_command(args: argparse.Namespace) -> int:
         args.capture_file,
         capture_format=args.format,
         session_index=args.session_index,
+        container=args.container,
     )
     if result.status == "COMPLETE" and args.output is not None:
         write_reconstructed_binary(result.selected_session.reconstructed_data, args.output)
@@ -173,6 +193,7 @@ def _reconstruct_command(args: argparse.Namespace) -> int:
             print(f"[FAIL] {error}", file=sys.stderr)
         return 2
     print(f"[OK] upload session: {session.index}")
+    print(f"[OK] container: {result.container.value}")
     print(f"[OK] C8: {session.c8_record.payload.hex().upper()}")
     print(f"[OK] declared size: {c8.declared_size}")
     print(f"[OK] packet count: {c8.declared_packet_count}")
@@ -183,8 +204,14 @@ def _reconstruct_command(args: argparse.Namespace) -> int:
     checksum_passed = sum(packet.checksum_valid for packet in session.c9_packets)
     print(f"[OK] checksum: {checksum_passed}/{len(session.c9_packets)}")
     print(f"[OK] reconstructed size: {result.reconstructed_size}")
-    print("[OK] BCSDIAL header")
-    print("[OK] BCBC footer")
+    if result.container is ContainerKind.BCSDIAL:
+        print("[OK] BCSDIAL header")
+        print("[OK] BCBC footer")
+    else:
+        print(f"[OK] header check: {result.header_check.value}")
+        print(f"[OK] footer check: {result.footer_check.value}")
+    print(f"[OK] raw DATA size: {result.raw_data_size}")
+    print(f"[OK] transformation: {result.transformation}")
     print(f"[OK] SHA-256: {result.reconstructed_sha256}")
     print("[OK] real BLE usage: 0")
     return 0

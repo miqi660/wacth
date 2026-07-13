@@ -1,7 +1,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+
+
+class ContainerKind(str, Enum):
+    BCSDIAL = "bcsdial"
+    GREENLION_STATIC = "greenlion-static"
+
+
+class ValidationCheck(str, Enum):
+    PASSED = "PASSED"
+    FAILED = "FAILED"
+    NOT_REQUIRED = "NOT_REQUIRED"
 
 
 @dataclass(frozen=True)
@@ -148,6 +160,7 @@ class C9Packet:
 @dataclass(frozen=True)
 class UploadSession:
     index: int
+    container: ContainerKind
     c8_record: CaptureRecord
     c8_packet: C8Packet | None
     c9_records: tuple[CaptureRecord, ...]
@@ -169,9 +182,18 @@ class ReconstructionResult:
     capture: ParsedCapture
     sessions: tuple[UploadSession, ...]
     selected_session: UploadSession
+    container: ContainerKind
     status: str
+    container_validation_passed: bool
     reconstructed_size: int
     reconstructed_sha256: str | None
-    header_valid: bool
-    footer_valid: bool
+    raw_data_size: int
+    raw_data_sha256: str | None
+    transformation: str
+    header_check: ValidationCheck
+    footer_check: ValidationCheck
+    header_observed_hex: str
+    footer_observed_hex: str
+    header_valid: bool | None
+    footer_valid: bool | None
     errors: tuple[str, ...]
