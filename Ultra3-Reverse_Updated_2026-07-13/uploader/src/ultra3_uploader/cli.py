@@ -112,6 +112,25 @@ def make_parser() -> argparse.ArgumentParser:
     prepare_parser.add_argument("--connect-timeout", type=float, default=20.0)
     prepare_parser.add_argument("--log-file", type=Path)
     prepare_parser.add_argument("--dry-run", action="store_true")
+    simulate_parser = subparsers.add_parser("simulate-upload-bcsdial")
+    simulate_parser.add_argument("--file", required=True)
+    simulate_parser.add_argument("--packet-delay-ms", type=float, default=45.0)
+    simulate_parser.add_argument("--ready-timeout", type=float, default=60.0)
+    simulate_parser.add_argument("--ca-timeout", type=float, default=30.0)
+    simulate_parser.add_argument("--log-file", type=Path)
+    simulate_parser.add_argument("--fail-at-sequence", type=int)
+    simulate_parser.add_argument("--disconnect-at-sequence", type=int)
+    simulate_parser.add_argument("--cancel-at-sequence", type=int)
+    simulate_parser.add_argument("--early-ca", action="store_true")
+    simulate_parser.add_argument("--duplicate-ca", action="store_true")
+    simulate_parser.add_argument("--missing-ca", action="store_true")
+    simulate_parser.add_argument("--ca-delay-seconds", type=float, default=0.0)
+    simulate_parser.add_argument("--max-write-size", default="244")
+    simulate_parser.add_argument("--force", action="store_true")
+    upload_parser = subparsers.add_parser("upload-bcsdial")
+    upload_parser.add_argument("--device")
+    upload_parser.add_argument("--file", required=True)
+    upload_parser.add_argument("--dry-run", action="store_true")
     return parser
 
 
@@ -269,6 +288,98 @@ async def _prepare_command(args: argparse.Namespace) -> int:
     return 0 if result.disconnected else 1
 
 
+def _parse_max_write_size(value: str) -> int | None:
+    if value.lower() == "unknown":
+        return None
+    try:
+        parsed = int(value)
+    except ValueError as exc:
+        raise Ultra3UploaderError("--max-write-size 必须是整数或 unknown") from exc
+    if parsed <= 0:
+        raise Ultra3UploaderError("--max-write-size 必须大于 0")
+    return parsed
+
+
+async def _simulate_upload_command(args: argparse.Namespace) -> int:
+    from .fake_transport import FakeBleTransport
+    from .timing import FakeClock, FakeSleeper
+    from .upload_bcsdial import upload_bcsdial
+
+    payload = BCSDIALPayload.from_path(Path(args.file))
+    if args.log_file is not None and args.log_file.exists():
+        if not args.force:
+            raise OutputExistsError(
+                f"日志文件已存在: {args.log_file}；使用 --force 才可覆盖"
+            )
+        args.log_file.unlink()
+    if sum((args.early_ca, args.duplicate_ca, args.missing_ca)) > 1:
+        raise Ultra3UploaderError("CA 模拟选项只能选择一个")
+    if args.early_ca:
+        ca_mode = "early"
+    elif args.duplicate_ca:
+        ca_mode = "duplicate"
+    elif args.missing_ca:
+        ca_mode = "missing"
+    elif args.ca_delay_seconds > 0:
+        ca_mode = "delayed"
+    else:
+        ca_mode = "normal"
+
+    cancellation_event = asyncio.Event()
+    maximum = _parse_max_write_size(args.max_write_size)
+    clock = FakeClock()
+    sleeper = FakeSleeper(clock)
+    transport = FakeBleTransport(
+        auto_prepare=True,
+        last_c9_sequence=payload.packet_count - 1,
+        ca_mode=ca_mode,
+        ca_delay_seconds=args.ca_delay_seconds,
+        fail_at_sequence=args.fail_at_sequence,
+        disconnect_at_sequence=args.disconnect_at_sequence,
+        cancel_at_sequence=args.cancel_at_sequence,
+        cancellation_event=cancellation_event,
+        max_write_size=maximum,
+    )
+    result = await upload_bcsdial(
+        transport,
+        payload,
+        packet_delay_ms=args.packet_delay_ms,
+        ready_timeout=args.ready_timeout,
+        ca_timeout=args.ca_timeout,
+        cancellation_event=cancellation_event,
+        logger=_logger(args.log_file),
+        sleeper=sleeper,
+        clock=clock,
+    )
+    print(f"[{'OK' if result.success else 'FAIL'}] final state: {result.final_state.value}")
+    print(f"[INFO] C8 writes: {result.c8_writes}")
+    print(f"[INFO] C9 writes: {result.c9_writes}")
+    print(f"[INFO] CA writes: {result.ca_writes}")
+    print(f"[INFO] total FF02 writes: {result.total_writes}")
+    print(f"[INFO] packets sent: {result.packets_sent}/{payload.packet_count}")
+    print(f"[INFO] bytes sent: {result.bytes_sent}/{payload.size}")
+    print(f"[INFO] FakeSleeper calls: {len(sleeper.calls)}")
+    print(f"[INFO] simulated delay seconds: {sleeper.total_seconds:.3f}")
+    print(f"[INFO] real BLE connections: 0")
+    if result.error_message:
+        print(f"[FAIL] {result.error_type}: {result.error_message}")
+    return 0 if result.success else 1
+
+
+def _upload_dry_run_command(args: argparse.Namespace) -> int:
+    from .errors import UploadSafetyError
+
+    payload = BCSDIALPayload.from_path(Path(args.file))
+    if not args.dry_run:
+        raise UploadSafetyError("Stage 6B build does not permit real BLE upload.")
+    print(f"文件大小: {payload.size}")
+    print(f"包数: {payload.packet_count}")
+    print(f"C8 HEX: {payload.build_prepare_frame().hex().upper()}")
+    print("真实 BLE 连接: 0")
+    print("FF02 writes: 0")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     args = make_parser().parse_args(argv)
     try:
@@ -286,7 +397,11 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(_listen_command(args))
         if args.command == "transport-self-test":
             return asyncio.run(_transport_self_test())
-        return asyncio.run(_prepare_command(args))
+        if args.command == "prepare-bcsdial":
+            return asyncio.run(_prepare_command(args))
+        if args.command == "simulate-upload-bcsdial":
+            return asyncio.run(_simulate_upload_command(args))
+        return _upload_dry_run_command(args)
     except KeyboardInterrupt:
         print("已取消；BLE 清理流程已执行。", file=sys.stderr)
         return 130

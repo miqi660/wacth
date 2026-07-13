@@ -56,3 +56,19 @@ class CountdownError(PrepareError):
 
 class C8ResponseMismatchError(PrepareError):
     """C8 response 与当前输入文件不匹配。"""
+
+
+class UploadError(Ultra3UploaderError):
+    """动态 BCSDIAL 完整上传模拟失败。"""
+
+
+class UploadSafetyError(UploadError):
+    """Stage 6B 真实 BLE 上传安全锁被触发。"""
+
+
+class UploadCancelledError(UploadError):
+    """上传被显式取消。"""
+
+
+class CAProtocolError(UploadError):
+    """CA success 到达时机或内容不符合已验证顺序。"""

@@ -54,3 +54,26 @@ python -m ultra3_uploader prepare-bcsdial `
 
 非 dry-run 模式只发送一个根据当前文件动态生成的 C8，随后验证 BC72 `30..0`、D1 ready
 和匹配的 C8 response。成功后立即退订并断开；不发送 C9，也不发送 CA apply。
+
+## Stage 6B：仅 Fake 完整上传模拟
+
+```powershell
+python -m ultra3_uploader simulate-upload-bcsdial `
+  --file "C:\path\watchface.bin" `
+  --packet-delay-ms 45 `
+  --log-file .\stage6b_simulation.jsonl
+```
+
+模拟命令只创建 `FakeBleTransport`，不会导入或初始化真实 BLE 后端。每个 C9 串行发送，
+完整 HEX 写入 JSONL；FakeSleeper 记录 45 ms 节奏但立即返回。
+
+Stage 6B 的真实上传保持硬锁：
+
+```powershell
+python -m ultra3_uploader upload-bcsdial --file "C:\path\watchface.bin"
+# 错误：Stage 6B build does not permit real BLE upload.
+
+python -m ultra3_uploader upload-bcsdial --file "C:\path\watchface.bin" --dry-run
+```
+
+只有后续 Stage 6C 明确解除安全锁后，才允许连接真实设备进行完整上传。

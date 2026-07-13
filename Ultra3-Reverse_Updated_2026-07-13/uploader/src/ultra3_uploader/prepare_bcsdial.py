@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .bcsdial import BCSDIALPayload
 from .ble_transport import BleTransport
@@ -21,6 +21,60 @@ from .upload_state import UploadState
 EXPECTED_COUNTDOWN = tuple(range(30, -1, -1))
 
 
+@dataclass
+class NotificationContext:
+    queue: asyncio.Queue[NotificationRecord]
+    logger: Stage5Logger
+    device_id: str
+    state: UploadState = UploadState.DISCONNECTED
+    subscribed: bool = False
+    ca_success_count: int = 0
+    early_ca_received: bool = False
+
+    def callback(self, data: bytes) -> None:
+        record = parse_notification(data)
+        self.logger.notification(
+            record,
+            state=self.state,
+            device_id=self.device_id,
+            uuid=FF03_UUID,
+        )
+        if record.command == "CA" and record.valid:
+            self.ca_success_count += 1
+            if self.state is UploadState.SENDING_C9:
+                self.early_ca_received = True
+                self.logger.emit(
+                    "unexpected_early_ca",
+                    direction="RX",
+                    state=self.state,
+                    device_id=self.device_id,
+                    hex_data=record.hex,
+                    command="CA",
+                )
+            elif self.ca_success_count > 1:
+                self.logger.emit(
+                    "duplicate_ca",
+                    direction="RX",
+                    state=self.state,
+                    device_id=self.device_id,
+                    hex_data=record.hex,
+                    command="CA",
+                    duplicate_count=self.ca_success_count,
+                )
+        self.queue.put_nowait(record)
+
+
+@dataclass
+class PreparedSession:
+    context: NotificationContext
+    c8_request: bytes
+    countdown: tuple[int, ...]
+    d1_received: bool
+    c8_response_matched: bool
+    maximum_write_without_response: int | None
+    sent_frames: list[bytes] = field(default_factory=list)
+
+
 @dataclass(frozen=True)
 class PrepareResult:
     file_size: int
@@ -36,12 +90,12 @@ class PrepareResult:
     final_state: UploadState
 
 
-async def _next_notification(
-    queue: asyncio.Queue[NotificationRecord],
+async def next_notification(
+    context: NotificationContext,
     transport: BleTransport,
     timeout: float,
 ) -> NotificationRecord:
-    notification_task = asyncio.create_task(queue.get())
+    notification_task = asyncio.create_task(context.queue.get())
     disconnected_task = asyncio.create_task(transport.wait_disconnected())
     tasks = (notification_task, disconnected_task)
     try:
@@ -53,13 +107,60 @@ async def _next_notification(
         if not done:
             raise asyncio.TimeoutError
         if disconnected_task in done:
-            raise BleDisconnectedError("准备期间 BLE 连接断开")
+            raise BleDisconnectedError("BLE 连接断开")
         return notification_task.result()
     finally:
         for task in tasks:
             if not task.done():
                 task.cancel()
         await asyncio.gather(*tasks, return_exceptions=True)
+
+
+async def cleanup_session(
+    transport: BleTransport,
+    context: NotificationContext,
+) -> list[str]:
+    errors: list[str] = []
+    if context.subscribed and transport.is_connected:
+        try:
+            await transport.stop_notify(FF03_UUID)
+            context.logger.emit(
+                "notify_disabled",
+                state=UploadState.DISCONNECTING,
+                device_id=context.device_id,
+                uuid=FF03_UUID,
+            )
+        except Exception as exc:
+            errors.append(f"停止 FF03 通知失败: {exc}")
+            context.logger.emit(
+                "stop_notify_failed",
+                state=UploadState.FAILED,
+                device_id=context.device_id,
+                uuid=FF03_UUID,
+                error=str(exc),
+            )
+    if transport.is_connected:
+        context.logger.emit(
+            "disconnecting",
+            state=UploadState.DISCONNECTING,
+            device_id=context.device_id,
+        )
+        try:
+            await transport.disconnect()
+        except Exception as exc:
+            errors.append(f"断开失败: {exc}")
+            context.logger.emit(
+                "disconnect_failed",
+                state=UploadState.FAILED,
+                device_id=context.device_id,
+                error=str(exc),
+            )
+    context.logger.emit(
+        "disconnected",
+        state=UploadState.DISCONNECTED,
+        device_id=context.device_id,
+    )
+    return errors
 
 
 def _remaining(deadline: float) -> float:
@@ -96,7 +197,7 @@ def _validate_c8_response(
         raise C8ResponseMismatchError("C8 response 内容与当前 C8 request 不匹配")
 
 
-async def run_prepare_bcsdial(
+async def prepare_bcsdial_session(
     transport: BleTransport,
     payload: BCSDIALPayload,
     *,
@@ -104,54 +205,52 @@ async def run_prepare_bcsdial(
     ready_timeout: float,
     connect_timeout: float,
     logger: Stage5Logger,
-) -> PrepareResult:
+    sent_frames: list[bytes] | None = None,
+) -> PreparedSession:
     payload.validate()
-    queue: asyncio.Queue[NotificationRecord] = asyncio.Queue()
-    state = UploadState.DISCONNECTED
-    subscribed = False
+    context = NotificationContext(asyncio.Queue(), logger, device_id)
+    frames = sent_frames if sent_frames is not None else []
     countdown: list[int] = []
     d1_received = False
     c8_confirmed = False
-    sent_frames: list[bytes] = []
     c8_request = payload.build_prepare_frame()
     expected_response = _expected_c8_response(c8_request)
-    cleanup_errors: list[str] = []
-
-    def on_notification(data: bytes) -> None:
-        record = parse_notification(data)
-        logger.notification(record, state=state, device_id=device_id, uuid=FF03_UUID)
-        queue.put_nowait(record)
 
     try:
-        state = UploadState.CONNECTING
-        logger.emit("connecting", state=state, device_id=device_id)
+        context.state = UploadState.CONNECTING
+        logger.emit("connecting", state=context.state, device_id=device_id)
         await transport.connect(device_id, connect_timeout)
-        state = UploadState.CONNECTED
-        logger.emit("connected", state=state, device_id=device_id)
+        context.state = UploadState.CONNECTED
+        logger.emit("connected", state=context.state, device_id=device_id)
 
         validation = validate_gatt(await transport.discover())
         require_valid_gatt(validation)
-        state = UploadState.GATT_VALIDATED
+        context.state = UploadState.GATT_VALIDATED
         logger.emit(
             "gatt_validated",
-            state=state,
+            state=context.state,
             device_id=device_id,
             maximum_write_without_response=validation.maximum_write_without_response,
             mtu_size=validation.mtu_size,
         )
 
-        await transport.start_notify(FF03_UUID, on_notification)
-        subscribed = True
-        state = UploadState.NOTIFY_ENABLED
-        logger.emit("notify_enabled", state=state, device_id=device_id, uuid=FF03_UUID)
+        await transport.start_notify(FF03_UUID, context.callback)
+        context.subscribed = True
+        context.state = UploadState.NOTIFY_ENABLED
+        logger.emit(
+            "notify_enabled",
+            state=context.state,
+            device_id=device_id,
+            uuid=FF03_UUID,
+        )
 
         await transport.write_without_response(FF02_UUID, c8_request)
-        sent_frames.append(c8_request)
-        state = UploadState.C8_SENT
+        frames.append(c8_request)
+        context.state = UploadState.C8_SENT
         logger.emit(
-            "frame_sent",
+            "write",
             direction="TX",
-            state=state,
+            state=context.state,
             device_id=device_id,
             uuid=FF02_UUID,
             length=len(c8_request),
@@ -162,8 +261,12 @@ async def run_prepare_bcsdial(
         d1_deadline = asyncio.get_running_loop().time() + ready_timeout
         while not d1_received:
             try:
-                record = await _next_notification(
-                    queue, transport, _remaining(d1_deadline)
+                record = (
+                    context.queue.get_nowait()
+                    if not context.queue.empty()
+                    else await next_notification(
+                        context, transport, _remaining(d1_deadline)
+                    )
                 )
             except asyncio.TimeoutError as exc:
                 if not countdown:
@@ -184,7 +287,7 @@ async def run_prepare_bcsdial(
                         f"BC72 倒计时乱序: 收到 {value}，预期 {expected}"
                     )
                 countdown.append(value)
-                state = UploadState.COUNTDOWN
+                context.state = UploadState.COUNTDOWN
                 continue
             if record.command == "D1":
                 if not record.valid:
@@ -196,8 +299,13 @@ async def run_prepare_bcsdial(
                         f"收到 D1，但 BC72 countdown 不完整: {len(countdown)}/31"
                     )
                 d1_received = True
-                state = UploadState.D1_READY
-                logger.emit("d1_ready", direction="RX", state=state, device_id=device_id)
+                context.state = UploadState.D1_READY
+                logger.emit(
+                    "d1_ready",
+                    direction="RX",
+                    state=context.state,
+                    device_id=device_id,
+                )
                 continue
             if record.command == "C8":
                 raise PrepareError("在 D1 ready 之前收到 C8 response")
@@ -205,8 +313,12 @@ async def run_prepare_bcsdial(
         c8_deadline = asyncio.get_running_loop().time() + ready_timeout
         while not c8_confirmed:
             try:
-                record = await _next_notification(
-                    queue, transport, _remaining(c8_deadline)
+                record = (
+                    context.queue.get_nowait()
+                    if not context.queue.empty()
+                    else await next_notification(
+                        context, transport, _remaining(c8_deadline)
+                    )
                 )
             except asyncio.TimeoutError as exc:
                 raise PrepareTimeoutError("C8 response 超时") from exc
@@ -216,63 +328,75 @@ async def run_prepare_bcsdial(
                 raise PrepareError(f"D1 ready 后收到非预期 {record.command} 通知")
             _validate_c8_response(record, payload, expected_response)
             c8_confirmed = True
-            state = UploadState.C8_CONFIRMED
-            logger.emit("c8_confirmed", direction="RX", state=state, device_id=device_id)
+            context.state = UploadState.C8_CONFIRMED
+            logger.emit(
+                "c8_confirmed",
+                direction="RX",
+                state=context.state,
+                device_id=device_id,
+            )
 
-        state = UploadState.PREPARE_VERIFIED
-        logger.emit("prepare_verified", state=state, device_id=device_id)
+        context.state = UploadState.PREPARE_VERIFIED
+        logger.emit("prepare_verified", state=context.state, device_id=device_id)
+        return PreparedSession(
+            context=context,
+            c8_request=c8_request,
+            countdown=tuple(countdown),
+            d1_received=d1_received,
+            c8_response_matched=c8_confirmed,
+            maximum_write_without_response=validation.maximum_write_without_response,
+            sent_frames=frames,
+        )
     except asyncio.CancelledError:
-        state = UploadState.CANCELLED
-        logger.emit("cancelled", state=state, device_id=device_id)
+        context.state = UploadState.CANCELLED
+        logger.emit("cancelled", state=context.state, device_id=device_id)
+        await cleanup_session(transport, context)
         raise
     except Exception as exc:
-        state = UploadState.FAILED
-        logger.emit("prepare_failed", state=state, device_id=device_id, error=str(exc))
+        context.state = UploadState.FAILED
+        logger.emit(
+            "prepare_failed",
+            state=context.state,
+            device_id=device_id,
+            error=str(exc),
+        )
+        await cleanup_session(transport, context)
         raise
-    finally:
-        if subscribed and transport.is_connected:
-            try:
-                await transport.stop_notify(FF03_UUID)
-            except Exception as exc:
-                cleanup_errors.append(f"停止 FF03 通知失败: {exc}")
-                logger.emit(
-                    "stop_notify_failed",
-                    state=UploadState.FAILED,
-                    device_id=device_id,
-                    uuid=FF03_UUID,
-                    error=str(exc),
-                )
-        if transport.is_connected:
-            state = UploadState.DISCONNECTING
-            logger.emit("disconnecting", state=state, device_id=device_id)
-            try:
-                await transport.disconnect()
-            except Exception as exc:
-                cleanup_errors.append(f"断开失败: {exc}")
-                logger.emit(
-                    "disconnect_failed",
-                    state=UploadState.FAILED,
-                    device_id=device_id,
-                    error=str(exc),
-                )
 
+
+async def run_prepare_bcsdial(
+    transport: BleTransport,
+    payload: BCSDIALPayload,
+    *,
+    device_id: str,
+    ready_timeout: float,
+    connect_timeout: float,
+    logger: Stage5Logger,
+) -> PrepareResult:
+    session = await prepare_bcsdial_session(
+        transport,
+        payload,
+        device_id=device_id,
+        ready_timeout=ready_timeout,
+        connect_timeout=connect_timeout,
+        logger=logger,
+    )
+    cleanup_errors = await cleanup_session(transport, session.context)
     if cleanup_errors:
         raise PrepareError("；".join(cleanup_errors))
-
-    state = UploadState.COMPLETE
-    logger.emit("complete", state=state, device_id=device_id)
-    c9_writes = sum(frame.startswith(b"\xBC\xC9") for frame in sent_frames)
-    ca_writes = sum(frame.startswith(b"\xBC\xCA") for frame in sent_frames)
+    logger.emit("complete", state=UploadState.COMPLETE, device_id=device_id)
+    c9_writes = sum(frame.startswith(b"\xBC\xC9") for frame in session.sent_frames)
+    ca_writes = sum(frame.startswith(b"\xBC\xCA") for frame in session.sent_frames)
     return PrepareResult(
         file_size=payload.size,
         packet_count=payload.packet_count,
-        c8_hex=c8_request.hex().upper(),
-        countdown=tuple(countdown),
-        d1_received=d1_received,
-        c8_response_matched=c8_confirmed,
-        ff02_write_count=len(sent_frames),
+        c8_hex=session.c8_request.hex().upper(),
+        countdown=session.countdown,
+        d1_received=session.d1_received,
+        c8_response_matched=session.c8_response_matched,
+        ff02_write_count=len(session.sent_frames),
         c9_write_count=c9_writes,
         ca_write_count=ca_writes,
         disconnected=not transport.is_connected,
-        final_state=state,
+        final_state=UploadState.COMPLETE,
     )
