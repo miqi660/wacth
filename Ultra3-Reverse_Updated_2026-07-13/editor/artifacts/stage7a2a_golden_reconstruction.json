@@ -1,0 +1,61 @@
+{
+  "status": "COMPLETE",
+  "source_capture": "C:\\Users\\Administrator\\Desktop\\Ultra3-Reverse_Updated_2026-07-13\\captures\\2026-07-13_bcsdial_ble_direct\\raw\\capture_light_v2.log",
+  "source_capture_sha256": "CD85A7AADDCC6BD85E108335DA0E0D63AF9FF24A88C5478F6E0BEA7E9CD6AE7F",
+  "format": "frida",
+  "requested_format": "auto",
+  "session_count": 1,
+  "session_index": 0,
+  "c8_hex": "BCC80207012C990D00230F05",
+  "mode": 1,
+  "declared_size": 891180,
+  "declared_packet_count": 3875,
+  "actual_packet_count": 3875,
+  "first_sequence": 0,
+  "last_sequence": 3874,
+  "checksum_passed": 3875,
+  "checksum_failed": 0,
+  "checksum_failed_sequences": [],
+  "missing_sequences": [],
+  "duplicate_sequences": [],
+  "out_of_order": false,
+  "reconstructed_size": 891180,
+  "reconstructed_sha256": "7B25A833D431ED29622EDF4C102F4B555F1E251D1CEC842D848E8E7DCE2C015D",
+  "output_path": "C:\\Users\\Administrator\\Desktop\\wacth\\Ultra3-Reverse_Updated_2026-07-13\\editor\\artifacts\\stage7a2a_golden_reconstructed.bin",
+  "header_valid": true,
+  "footer_valid": true,
+  "errors": [],
+  "capture_statistics": {
+    "total_lines": 3926,
+    "recognized_records": 3916,
+    "ff02_writes": 3877,
+    "ff03_notifications": 39,
+    "unrecognized_lines": 10,
+    "non_target_frames": 0,
+    "c8_count": 1,
+    "c9_count": 3875,
+    "ca_apply_count": 1
+  },
+  "sessions": [
+    {
+      "session_index": 0,
+      "c8_hex": "BCC80207012C990D00230F05",
+      "mode": 1,
+      "declared_file_size": 891180,
+      "declared_packet_count": 3875,
+      "first_sequence": 0,
+      "last_sequence": 3874,
+      "c9_count": 3875,
+      "start_line": 12,
+      "end_line": 3920,
+      "complete": true,
+      "errors": []
+    }
+  ],
+  "real_ble_usage": {
+    "bleak_initializations": 0,
+    "scan": 0,
+    "connect": 0,
+    "ff02_writes": 0
+  }
+}

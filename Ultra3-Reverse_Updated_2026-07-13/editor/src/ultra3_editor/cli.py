@@ -11,6 +11,13 @@ from .hexdump import format_hexdump, hex_bytes
 from .inspector import inspect_bcsdial
 from .known_patch import verify_known_patch
 from .ranges import parse_offset
+from .capture_reader import CAPTURE_FORMATS
+from .reconstruction_reports import (
+    write_reconstructed_binary,
+    write_reconstruction_json,
+    write_reconstruction_markdown,
+)
+from .reconstructor import reconstruct_capture
 from .reports import (
     ensure_output_paths_available,
     inspection_dict,
@@ -42,6 +49,18 @@ def make_parser() -> argparse.ArgumentParser:
     verify_parser = commands.add_parser("verify-known-patch")
     verify_parser.add_argument("before")
     verify_parser.add_argument("after")
+
+    reconstruct_parser = commands.add_parser("reconstruct-c9")
+    reconstruct_parser.add_argument("capture_file")
+    reconstruct_parser.add_argument(
+        "--format",
+        choices=CAPTURE_FORMATS,
+        default="auto",
+    )
+    reconstruct_parser.add_argument("--session-index", type=int)
+    reconstruct_parser.add_argument("--output", type=Path)
+    reconstruct_parser.add_argument("--json", type=Path)
+    reconstruct_parser.add_argument("--report", type=Path)
     return parser
 
 
@@ -132,6 +151,45 @@ def _verify_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _reconstruct_command(args: argparse.Namespace) -> int:
+    ensure_output_paths_available([args.output, args.json, args.report])
+    result = reconstruct_capture(
+        args.capture_file,
+        capture_format=args.format,
+        session_index=args.session_index,
+    )
+    if result.status == "COMPLETE" and args.output is not None:
+        write_reconstructed_binary(result.selected_session.reconstructed_data, args.output)
+    if args.json is not None:
+        write_reconstruction_json(result, args.json, output_path=args.output)
+    if args.report is not None:
+        write_reconstruction_markdown(result, args.report, output_path=args.output)
+
+    session = result.selected_session
+    c8 = session.c8_packet
+    if result.status != "COMPLETE" or c8 is None:
+        print("[FAIL] reconstruction rejected", file=sys.stderr)
+        for error in result.errors:
+            print(f"[FAIL] {error}", file=sys.stderr)
+        return 2
+    print(f"[OK] upload session: {session.index}")
+    print(f"[OK] C8: {session.c8_record.payload.hex().upper()}")
+    print(f"[OK] declared size: {c8.declared_size}")
+    print(f"[OK] packet count: {c8.declared_packet_count}")
+    print(
+        f"[OK] sequence: {session.c9_packets[0].sequence}.."
+        f"{session.c9_packets[-1].sequence}"
+    )
+    checksum_passed = sum(packet.checksum_valid for packet in session.c9_packets)
+    print(f"[OK] checksum: {checksum_passed}/{len(session.c9_packets)}")
+    print(f"[OK] reconstructed size: {result.reconstructed_size}")
+    print("[OK] BCSDIAL header")
+    print("[OK] BCBC footer")
+    print(f"[OK] SHA-256: {result.reconstructed_sha256}")
+    print("[OK] real BLE usage: 0")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         args = make_parser().parse_args(argv)
@@ -139,7 +197,9 @@ def main(argv: list[str] | None = None) -> int:
             return _inspect_command(args)
         if args.command == "diff":
             return _diff_command(args)
-        return _verify_command(args)
+        if args.command == "verify-known-patch":
+            return _verify_command(args)
+        return _reconstruct_command(args)
     except EditorError as exc:
         print(f"错误: {exc}", file=sys.stderr)
         return 2

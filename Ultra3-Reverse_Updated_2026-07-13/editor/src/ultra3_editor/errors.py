@@ -20,3 +20,23 @@ class ReportExistsError(EditorError):
 
 class KnownPatchVerificationError(EditorError):
     """样本对不符合已确认的单字节补丁。"""
+
+
+class CaptureReadError(EditorError):
+    """抓包文件不存在、为空或无法读取。"""
+
+
+class CaptureFormatError(EditorError):
+    """抓包行或 HEX payload 无法安全识别。"""
+
+
+class FrameValidationError(EditorError):
+    """C8/C9 帧结构不符合已验证协议。"""
+
+
+class SessionSelectionError(EditorError):
+    """找不到唯一可重组的上传会话。"""
+
+
+class ReconstructionError(EditorError):
+    """上传会话未通过严格重组验证。"""

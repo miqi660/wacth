@@ -13,6 +13,13 @@ python -m ultra3_editor diff "<before.bin>" "<after.bin>" `
   --json .\artifacts\diff.json `
   --report .\diff.md
 python -m ultra3_editor verify-known-patch "<before.bin>" "<after.bin>"
+python -m ultra3_editor reconstruct-c9 "<capture.log>" `
+  --format auto `
+  --output .\artifacts\reconstructed.bin `
+  --json .\artifacts\reconstruction.json `
+  --report .\artifacts\reconstruction.md
 ```
 
 报告使用独占创建，已存在时拒绝覆盖，不提供 `--force`。输入 BIN 始终只读。
+`reconstruct-c9` 只提取 App→手表的 FF02 写入；C8/C9 checksum、原始 sequence、声明
+包数与大小、BCSDIAL 头和 BCBC 尾必须全部通过。工具不会排序、去重、补零或修复抓包。

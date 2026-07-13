@@ -1,0 +1,12 @@
+{
+  "sample_id": "A0_repeat_2",
+  "purpose": "determinism baseline",
+  "app": "GreenLion",
+  "watch_firmware": "NJ-LEJ-2.1.7",
+  "background_sha256": null,
+  "time_position": null,
+  "time_color": null,
+  "root_phone_capture": null,
+  "capture_transport": "FF02",
+  "notes": "Planned only; not captured. Must use the same settings as A0_repeat_1."
+}
