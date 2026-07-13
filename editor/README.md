@@ -54,18 +54,19 @@ uploader，不调用 BLE、adb、Frida 或 Builder。
 
 ## Ultra3 Lab 离线 GUI
 
-Stage 8A 提供 PyQt6 深色只读 GUI 骨架：
+Stage 8A.2 提供 PyQt6 深色离线时间位置编辑 GUI：
 
 ```powershell
 python -m pip install ".[gui]"
 python -m ultra3_editor gui
 ```
 
-Stage 7B-1 已提供独立的 `set_time_position()` 公共核心，但尚未接入 Stage 8A GUI。GUI
-仍只允许打开、校验和示意预览 351617 字节 GreenLion Static DIY BIN；目标位置、输出路径
-与生成按钮继续禁用。GUI 不修改 BIN、不导入 uploader，也不提供 BLE、adb 或 Frida 功能。
+GUI 通过 `OfflineGuiController` 调用 Stage 7B-1 `set_time_position()`，支持选择 Top/Bottom、
+新输出路径及可选 JSON/Markdown，并展示写后复验和黄金匹配。GUI 不读取或 patch BIN 字节，
+不覆盖输入或已有输出，不导入 uploader，也不提供 BLE、adb、Frida 或上传功能。
 
 静态 DIY 资源预览使用两个独立的已验证画布：主图 `320 × 384`、缩略图 `210 × 252`，
 比例均为 `5:6`。它们是资源尺寸，不是物理屏幕分辨率；物理显示几何与可见区域均为
 `UNKNOWN`。当前仓库没有 `Builder v0.2.4-greenlion-exact` 公共接口，因此图片导入、适配、
-RGB565 编码、缩略图生成和 BIN 构建保持禁用。
+RGB565 编码、缩略图生成和完整表盘构建继续硬禁用；时间位置 BIN 编辑与资源制作在界面中
+明确区分。

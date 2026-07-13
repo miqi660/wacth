@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QGuiApplication
+from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QDesktopServices, QGuiApplication
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import (
 from ..errors import EditorError
 from ..resource_geometry import MAIN_RESOURCE, THUMBNAIL_RESOURCE
 from ..static_diy import StaticDiyInspection, TimePosition
-from .controllers import OfflineGuiController
+from .controllers import OfflineGuiController, TimePositionEditPlan
 from .widgets import BadgeState, ResourcePreview, StatusBadge
 
 
@@ -41,7 +41,10 @@ class MainWindow(QMainWindow):
         self.current_info: StaticDiyInspection | None = None
         self.last_error: str | None = None
         self.last_dialog: QDialog | None = None
-        self.setWindowTitle("Ultra3 Lab — Offline GUI MVP")
+        self.last_result = None
+        self.last_plan: TimePositionEditPlan | None = None
+        self._busy = False
+        self.setWindowTitle("Ultra3 Lab — Offline Time-position Editor")
         self.resize(1280, 800)
         self.setMinimumSize(1050, 680)
         self._build_ui()
@@ -111,14 +114,14 @@ class MainWindow(QMainWindow):
             group.addButton(button)
             layout.addWidget(button)
             self.nav_buttons[label] = button
-        self.nav_buttons["表盘制作"].setChecked(True)
+        self.nav_buttons["BIN 编辑"].setChecked(True)
         layout.addStretch()
         gate = QFrame(objectName="card")
         gate_layout = QVBoxLayout(gate)
         gate_layout.setContentsMargins(12, 12, 12, 12)
-        gate_layout.addWidget(StatusBadge("READ ONLY", BadgeState.UNSUPPORTED))
+        gate_layout.addWidget(StatusBadge("BIN EDIT AVAILABLE", BadgeState.VERIFIED))
         gate_text = QLabel(
-            "Builder / Stage 7B-1 未接入\n资源构建与编辑已安全锁定",
+            "时间位置编辑可用\nBuilder / 资源制作仍安全锁定",
             objectName="muted",
         )
         gate_text.setWordWrap(True)
@@ -255,7 +258,7 @@ class MainWindow(QMainWindow):
     def _build_time_card(self) -> QWidget:
         card, layout = self._new_card("时间位置示意")
         row = QHBoxLayout()
-        row.addWidget(StatusBadge("VERIFIED", BadgeState.VERIFIED))
+        row.addWidget(StatusBadge("VERIFIED / EDITABLE", BadgeState.VERIFIED))
         row.addStretch()
         row.addWidget(QLabel("offset 0x00000000", objectName="mono"))
         layout.addLayout(row)
@@ -266,16 +269,20 @@ class MainWindow(QMainWindow):
         self.bottom_radio = QRadioButton("下方")
         for radio in (self.top_radio, self.bottom_radio):
             radio.setEnabled(False)
-            radio.setToolTip("Stage 7B-1 编辑核心尚未接入")
+            radio.setToolTip("加载有效 BIN 后可选择目标位置")
+            radio.toggled.connect(self._update_edit_state)
             radio_row.addWidget(radio)
         layout.addLayout(radio_row)
         self.change_summary = QLabel(
-            "只读模式 · 不会创建输出\nOffset: 0x00000000\nValue: —\nChanged: 0 bytes",
+            "尚未加载文件\nOffset: 0x00000000\nValue: —\nChanged: 0 bytes\nUnchanged: —",
             objectName="mono",
         )
         self.change_summary.setWordWrap(True)
         layout.addWidget(self.change_summary)
-        gate = QLabel("没有可用的编辑核心，目标选择与导出均已禁用。", objectName="muted")
+        gate = QLabel(
+            "仅调用已验证的 Stage 7B-1 公共核心；预览位置为 SCHEMATIC。",
+            objectName="muted",
+        )
         gate.setWordWrap(True)
         layout.addWidget(gate)
         return card
@@ -302,6 +309,9 @@ class MainWindow(QMainWindow):
         self.fit_mode.addItems(("裁剪填充（cover）", "完整适应（contain）", "居中裁剪"))
         self.fit_mode.setEnabled(False)
         layout.addWidget(self.fit_mode)
+        self.builder_generate_button = QPushButton("生成完整表盘 BIN")
+        self.builder_generate_button.setEnabled(False)
+        layout.addWidget(self.builder_generate_button)
         gate = QLabel(
             "当前源码没有 Builder v0.2.4-greenlion-exact 公共接口，"
             "资源导入、适配与缩略图生成均未执行。",
@@ -314,26 +324,32 @@ class MainWindow(QMainWindow):
             choose_thumbnail,
             generate_thumbnail,
             self.fit_mode,
+            self.builder_generate_button,
         )
         return card
 
     def _build_export_card(self) -> QWidget:
-        card, layout = self._new_card("构建")
-        self.output_path = QLineEdit("Builder 公共接口接入后启用", objectName="mono")
+        card, layout = self._new_card("BIN 编辑导出")
+        self.output_path = QLineEdit(objectName="mono")
+        self.output_path.setPlaceholderText("选择新的输出 BIN 路径")
         self.output_path.setEnabled(False)
+        self.output_path.textChanged.connect(self._update_edit_state)
         layout.addWidget(self.output_path)
-        select_output = QPushButton("选择输出位置")
-        select_output.setEnabled(False)
-        layout.addWidget(select_output)
+        self.select_output_button = QPushButton("选择输出 BIN")
+        self.select_output_button.setEnabled(False)
+        self.select_output_button.clicked.connect(self._choose_output)
+        layout.addWidget(self.select_output_button)
         self.json_checkbox = QCheckBox("生成 JSON 编辑记录")
         self.markdown_checkbox = QCheckBox("生成 Markdown 编辑报告")
         for checkbox in (self.json_checkbox, self.markdown_checkbox):
             checkbox.setChecked(True)
             checkbox.setEnabled(False)
+            checkbox.stateChanged.connect(self._update_edit_state)
             layout.addWidget(checkbox)
-        self.generate_button = QPushButton("生成表盘 BIN", objectName="primaryButton")
+        self.generate_button = QPushButton("生成新 BIN", objectName="primaryButton")
         self.generate_button.setEnabled(False)
-        self.generate_button.setToolTip("只读 GUI：未接入 Builder 公共接口")
+        self.generate_button.setToolTip("只生成新的离线 BIN，不修改输入，不执行上传")
+        self.generate_button.clicked.connect(self._generate_new_bin)
         layout.addWidget(self.generate_button)
         return card
 
@@ -356,7 +372,10 @@ class MainWindow(QMainWindow):
             control.setEnabled(False)
             self.unsupported_controls.append(control)
             row.addWidget(control, 1)
-            row.addWidget(StatusBadge(status, state))
+            badge = StatusBadge(status, state)
+            if label == "Builder":
+                self.builder_status = badge
+            row.addWidget(badge)
             layout.addLayout(row)
         return card
 
@@ -410,7 +429,8 @@ class MainWindow(QMainWindow):
         self.ble_label = QLabel("BLE usage: 0", objectName="mono")
         layout.addWidget(self.ble_label)
         layout.addSpacing(28)
-        layout.addWidget(QLabel("READ ONLY"))
+        self.mode_label = QLabel("OFFLINE EDIT")
+        layout.addWidget(self.mode_label)
         return bar
 
     def _select_resource_tab(self, index: int) -> None:
@@ -418,7 +438,7 @@ class MainWindow(QMainWindow):
         self.preview.set_resource(resource)
 
     def _navigate(self, name: str) -> None:
-        if name == "表盘制作":
+        if name in ("表盘制作", "BIN 编辑"):
             self.workspace.setCurrentWidget(self.edit_page)
             return
         self.placeholder_title.setText(name)
@@ -427,7 +447,7 @@ class MainWindow(QMainWindow):
                 "设置尚未持久化。当前固定为：深色主题、完整 SHA-256、零 BLE、无自动打开。"
             )
         else:
-            self.placeholder_message.setText("当前版本仅支持命令行；此页面未接入 GUI。")
+            self.placeholder_message.setText("当前页面尚未接入；时间位置编辑请使用 BIN 编辑。")
         self.workspace.setCurrentWidget(self.placeholder_page)
 
     def _choose_file(self) -> None:
@@ -439,6 +459,23 @@ class MainWindow(QMainWindow):
         )
         if filename:
             self.load_file(filename)
+
+    def _choose_output(self) -> None:
+        if self.current_info is None:
+            return
+        target = self._selected_target()
+        suffix = target.value if target is not None else "edited"
+        suggestion = self.current_info.path.with_name(
+            f"{self.current_info.path.stem}_{suffix}.bin"
+        )
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "选择新的输出 BIN",
+            str(suggestion),
+            "BIN files (*.bin);;All files (*)",
+        )
+        if filename:
+            self.output_path.setText(filename)
 
     def load_file(self, path: str | Path, *, show_error: bool = True) -> bool:
         try:
@@ -453,6 +490,8 @@ class MainWindow(QMainWindow):
             return False
         self.current_info = info
         self.last_error = None
+        self.last_result = None
+        self.last_plan = None
         self._render_file(info)
         return True
 
@@ -471,14 +510,264 @@ class MainWindow(QMainWindow):
         self.top_radio.setChecked(info.time_position is TimePosition.TOP)
         self.bottom_radio.setChecked(info.time_position is TimePosition.BOTTOM)
         self.preview.set_position(info.time_position)
-        self.change_summary.setText(
-            "只读模式 · 不会创建输出\n"
-            "Offset: 0x00000000\n"
-            f"Value: {info.first_byte:02X} → —\n"
-            "Changed: 0 bytes"
+        self.output_path.clear()
+        self.json_checkbox.setChecked(True)
+        self.markdown_checkbox.setChecked(True)
+        self._update_edit_state()
+
+    def _selected_target(self) -> TimePosition | None:
+        if self.top_radio.isChecked():
+            return TimePosition.TOP
+        if self.bottom_radio.isChecked():
+            return TimePosition.BOTTOM
+        return None
+
+    def _preview_plan(self) -> TimePositionEditPlan | None:
+        if self.current_info is None:
+            return None
+        target = self._selected_target()
+        if target is None or target is self.current_info.time_position:
+            return None
+        output_text = self.output_path.text().strip()
+        output = (
+            Path(output_text)
+            if output_text
+            else self.current_info.path.with_name(
+                f"{self.current_info.path.stem}_{target.value}.bin"
+            )
         )
-        self.status_label.setText("VERIFIED · Ready")
-        self.changed_label.setText("Changed bytes: 0")
+        return self.controller.prepare_time_position_edit(
+            self.current_info,
+            output,
+            target,
+            include_json=self.json_checkbox.isChecked(),
+            include_report=self.markdown_checkbox.isChecked(),
+        )
+
+    def _current_plan(self) -> TimePositionEditPlan | None:
+        if not self.output_path.text().strip():
+            return None
+        return self._preview_plan()
+
+    @staticmethod
+    def _plan_paths_are_distinct(plan: TimePositionEditPlan) -> bool:
+        paths = [
+            str(path).casefold()
+            for path in (plan.output_path, plan.json_path, plan.report_path)
+            if path is not None
+        ]
+        return len(paths) == len(set(paths))
+
+    def _update_edit_state(self, *_args) -> None:
+        loaded = self.current_info is not None
+        controls_enabled = loaded and not self._busy
+        for control in (
+            self.top_radio,
+            self.bottom_radio,
+            self.output_path,
+            self.select_output_button,
+            self.json_checkbox,
+            self.markdown_checkbox,
+        ):
+            control.setEnabled(controls_enabled)
+
+        plan = self._preview_plan() if loaded else None
+        if not loaded:
+            self.change_summary.setText(
+                "尚未加载文件\nOffset: 0x00000000\nValue: —\n"
+                "Changed: 0 bytes\nUnchanged: —"
+            )
+            self.changed_label.setText("Changed bytes: 0")
+            self.generate_button.setEnabled(False)
+            self.status_label.setText("No file loaded")
+            return
+
+        if plan is None:
+            self.preview.set_position(self.current_info.time_position)
+            self.change_summary.setText(
+                "没有变化 · 当前值与目标值相同\n"
+                "Offset: 0x00000000\n"
+                f"Value: {self.current_info.first_byte:02X} → {self.current_info.first_byte:02X}\n"
+                "Changed: 0 bytes\n"
+                f"Unchanged: {self.current_info.size} bytes"
+            )
+            self.changed_label.setText("Changed bytes: 0")
+            self.generate_button.setEnabled(False)
+            self.status_label.setText(
+                "VALIDATING · BLE usage: 0" if self._busy else "VERIFIED · No changes · READY"
+            )
+            return
+
+        self.preview.set_position(plan.target_position)
+        self.change_summary.setText(
+            f"Offset: {plan.field_offset_hex}\n"
+            f"Value: {plan.before_hex} → {plan.after_hex}\n"
+            f"Changed: {plan.changed_byte_count} byte\n"
+            f"Unchanged: {plan.unchanged_byte_count} bytes"
+        )
+        self.changed_label.setText(f"Changed bytes: {plan.changed_byte_count}")
+        ready = (
+            bool(self.output_path.text().strip())
+            and self._plan_paths_are_distinct(plan)
+            and not self._busy
+        )
+        self.generate_button.setEnabled(ready)
+        if self._busy:
+            self.status_label.setText("VALIDATING · BLE usage: 0")
+        elif ready:
+            self.status_label.setText("VERIFIED · READY TO EXPORT")
+        else:
+            self.status_label.setText("VERIFIED · Output path required")
+
+    def _create_export_confirmation(self, plan: TimePositionEditPlan) -> QMessageBox:
+        current = self.current_info.time_position.label if self.current_info else "—"
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("确认生成新 BIN")
+        dialog.setIcon(QMessageBox.Icon.Question)
+        dialog.setText("确认离线生成新的时间位置 BIN")
+        dialog.setInformativeText(
+            f"输入文件：{plan.input_path.name}\n"
+            f"输出文件：{plan.output_path.name}\n"
+            f"时间位置：{current} → {plan.target_position.label}\n"
+            f"Offset：{plan.field_offset_hex}\n"
+            f"Value：{plan.before_hex} → {plan.after_hex}\n"
+            f"Changed bytes: {plan.changed_byte_count}\n"
+            f"JSON：{'启用' if plan.json_path else '关闭'}\n"
+            f"Markdown：{'启用' if plan.report_path else '关闭'}\n"
+            "输入文件不会被修改\n"
+            "不执行 BLE 上传"
+        )
+        generate = dialog.addButton("生成", QMessageBox.ButtonRole.AcceptRole)
+        dialog.addButton("取消", QMessageBox.ButtonRole.RejectRole)
+        dialog.generate_button = generate
+        return dialog
+
+    def show_export_confirmation(self, plan: TimePositionEditPlan) -> QMessageBox:
+        dialog = self._create_export_confirmation(plan)
+        dialog.setModal(False)
+        dialog.open()
+        self.last_dialog = dialog
+        return dialog
+
+    def _confirm_export(self, plan: TimePositionEditPlan) -> bool:
+        dialog = self._create_export_confirmation(plan)
+        dialog.exec()
+        self.last_dialog = dialog
+        return dialog.clickedButton() is dialog.generate_button
+
+    def _generate_new_bin(self) -> None:
+        if self._busy or not self.generate_button.isEnabled():
+            return
+        plan = self._current_plan()
+        if plan is None or not self._confirm_export(plan):
+            return
+
+        self._busy = True
+        self.last_error = None
+        self.last_result = None
+        self._update_edit_state()
+        failure: tuple[str, str, str] | None = None
+        try:
+            result = self.controller.execute_time_position_edit(plan)
+        except EditorError as error:
+            mapped = self.controller.user_error(error)
+            self.last_error = mapped.message
+            failure = (mapped.title, mapped.message, mapped.technical_details)
+        except Exception as error:
+            self.last_error = "发生未预期错误，操作未完成。"
+            failure = (
+                "离线编辑失败",
+                self.last_error,
+                f"{type(error).__name__}: {error}",
+            )
+        finally:
+            self._busy = False
+            self._update_edit_state()
+
+        if failure is not None:
+            self.status_label.setText("ERROR · No output created")
+            self._show_error(*failure)
+            return
+
+        self.last_result = result
+        self.last_plan = plan
+        self.status_label.setText("COMPLETE · Changed bytes: 1")
+        self._show_success(result, plan)
+
+    def _show_success(self, result, plan: TimePositionEditPlan) -> QDialog:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("生成成功")
+        dialog.setMinimumWidth(620)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(24, 22, 24, 22)
+        layout.addWidget(QLabel("生成成功", objectName="pageTitle"))
+        golden_text, golden_state = self._golden_status(result.exact_golden_match)
+        layout.addWidget(StatusBadge(golden_text, golden_state))
+        summary = QLabel(
+            f"输入位置：{result.detected_input_position.label}\n"
+            f"输出位置：{result.output_position.label}\n"
+            f"时间位置：{result.detected_input_position.label} → {result.output_position.label}\n"
+            f"修改偏移：{result.field_offset_hex}\n"
+            f"修改值：{result.before_hex} → {result.after_hex}\n"
+            f"Changed bytes：{result.changed_byte_count}\n"
+            f"Unchanged bytes：{result.unchanged_byte_count}\n"
+            f"输出大小：{result.output_size}\n"
+            f"输出文件：{result.output_path.name}\n"
+            f"输出 SHA-256：{result.output_sha256}\n"
+            f"输入文件未改变：{'是' if result.input_unchanged else '否'}\n"
+            f"输出写后复核：{'通过' if result.output_revalidated else '失败'}\n"
+            "BLE：0 · ADB：0 · Frida：0 · Uploader：0",
+            objectName="mono",
+        )
+        summary.setWordWrap(True)
+        summary.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+            | Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        layout.addWidget(summary)
+
+        actions = QHBoxLayout()
+        folder = QPushButton("打开输出文件夹")
+        folder.clicked.connect(lambda: self._open_local_path(result.output_path.parent))
+        actions.addWidget(folder)
+        copy_sha = QPushButton("复制 SHA-256")
+        copy_sha.clicked.connect(self._copy_output_sha)
+        actions.addWidget(copy_sha)
+        open_json = QPushButton("打开 JSON")
+        open_json.setEnabled(plan.json_path is not None)
+        if plan.json_path is not None:
+            open_json.clicked.connect(lambda: self._open_local_path(plan.json_path))
+        actions.addWidget(open_json)
+        open_report = QPushButton("打开 Markdown")
+        open_report.setEnabled(plan.report_path is not None)
+        if plan.report_path is not None:
+            open_report.clicked.connect(lambda: self._open_local_path(plan.report_path))
+        actions.addWidget(open_report)
+        layout.addLayout(actions)
+
+        close = QPushButton("关闭")
+        close.clicked.connect(dialog.close)
+        layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+        dialog.setModal(False)
+        dialog.show()
+        self.last_dialog = dialog
+        return dialog
+
+    @staticmethod
+    def _golden_status(value: bool | str) -> tuple[str, BadgeState]:
+        if value is True:
+            return "VERIFIED GOLDEN MATCH", BadgeState.VERIFIED
+        if value is False:
+            return "GOLDEN MISMATCH", BadgeState.ERROR
+        return "CUSTOM VALID BIN", BadgeState.EXPERIMENTAL
+
+    def _copy_output_sha(self) -> None:
+        if self.last_result is not None:
+            QGuiApplication.clipboard().setText(self.last_result.output_sha256)
+
+    @staticmethod
+    def _open_local_path(path: Path) -> None:
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
 
     def _set_badge(self, badge: StatusBadge, text: str, state: BadgeState) -> None:
         badge.setText(text)
@@ -506,14 +795,14 @@ class MainWindow(QMainWindow):
         dialog.open()
         self.last_dialog = dialog
 
-    def show_stage_gate_dialog(self, title: str = "导出功能已锁定") -> QDialog:
+    def show_stage_gate_dialog(self, title: str = "资源 Builder 已锁定") -> QDialog:
         dialog = QMessageBox(self)
         dialog.setWindowTitle(title)
         dialog.setIcon(QMessageBox.Icon.Information)
         dialog.setText("NOT EXECUTED")
         dialog.setInformativeText(
             "Builder v0.2.4-greenlion-exact 公共接口尚未进入当前源码；"
-            "Stage 7B-1 set_time_position() 也未接入。当前 GUI 不生成或修改任何 BIN。"
+            "时间位置编辑可用，但资源导入、缩略图和完整表盘构建仍不执行。"
         )
         dialog.setStandardButtons(QMessageBox.StandardButton.Close)
         dialog.setModal(False)
@@ -538,7 +827,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(24, 22, 24, 22)
         layout.addWidget(QLabel("Ultra3 Lab", objectName="pageTitle"))
-        layout.addWidget(StatusBadge("OFFLINE GUI MVP", BadgeState.VERIFIED))
+        layout.addWidget(StatusBadge("OFFLINE TIME-POSITION EDITOR", BadgeState.VERIFIED))
         verified = QLabel(
             "已验证\n"
             "• GreenLion Static DIY\n"
@@ -547,11 +836,12 @@ class MainWindow(QMainWindow):
             "• Main resource：320 × 384（5:6）\n"
             "• Thumbnail resource：210 × 252（5:6）\n"
             "• Physical display geometry：UNKNOWN\n"
-            "• offset 0x00000000：00 = top，01 = bottom"
+            "• offset 0x00000000：00 = top，01 = bottom\n"
+            "• 时间位置编辑：AVAILABLE"
         )
         unsupported = QLabel(
             "未接入 / 未验证\n"
-            "• Builder、资源导入、BIN 编辑与 GUI 上传\n"
+            "• Builder、资源导入与 GUI 上传\n"
             "• 其他固件、预设表盘、时间颜色\n"
             "• 日期、星期、步数、卡路里、心率、组件拖拽"
         )

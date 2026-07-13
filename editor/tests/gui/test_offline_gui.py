@@ -96,7 +96,7 @@ def test_invalid_size_maps_to_readable_error(qapp, tmp_path: Path) -> None:
     path.write_bytes(b"bad")
     window = make_window(qapp)
     assert not window.load_file(path, show_error=False)
-    assert window.last_error == "当前 GUI 仅允许检查已验证的 351617 字节 GreenLion 静态 DIY 文件。"
+    assert window.last_error == "当前仅支持已验证的 351617 字节 GreenLion Static DIY BIN。"
     assert window.status_label.text() == "ERROR · No output created"
     window.close()
 
@@ -106,14 +106,14 @@ def test_unknown_first_byte_is_rejected(qapp, tmp_path: Path) -> None:
     path.write_bytes(b"\x02" + bytes(STATIC_DIY_SIZE - 1))
     window = make_window(qapp)
     assert not window.load_file(path, show_error=False)
-    assert window.last_error == "offset 0x00000000 的值不是 00 或 01。"
+    assert window.last_error == "offset 0x00000000 的值必须是 00 或 01。"
     window.close()
 
 
 def test_missing_file_is_rejected(qapp, tmp_path: Path) -> None:
     window = make_window(qapp)
     assert not window.load_file(tmp_path / "missing.bin", show_error=False)
-    assert window.last_error == "请选择存在且可读取的普通 BIN 文件。"
+    assert window.last_error == "请确认文件仍存在且具有读取权限。"
     window.close()
 
 
@@ -125,14 +125,14 @@ def test_loading_never_modifies_input(qapp) -> None:
     window.close()
 
 
-def test_edit_and_export_controls_are_hard_disabled(qapp) -> None:
+def test_edit_controls_unlock_but_noop_stays_disabled(qapp) -> None:
     window = make_window(qapp)
     window.load_file(TOP, show_error=False)
-    assert not window.top_radio.isEnabled()
-    assert not window.bottom_radio.isEnabled()
-    assert not window.output_path.isEnabled()
-    assert not window.json_checkbox.isEnabled()
-    assert not window.markdown_checkbox.isEnabled()
+    assert window.top_radio.isEnabled()
+    assert window.bottom_radio.isEnabled()
+    assert window.output_path.isEnabled()
+    assert window.json_checkbox.isEnabled()
+    assert window.markdown_checkbox.isEnabled()
     assert not window.generate_button.isEnabled()
     assert window.changed_label.text() == "Changed bytes: 0"
     window.close()
@@ -152,9 +152,7 @@ def test_navigation_shows_honest_placeholder(qapp) -> None:
     window = make_window(qapp)
     window.nav_buttons["BIN 编辑"].click()
     qapp.processEvents()
-    assert window.workspace.currentWidget() is window.placeholder_page
-    assert window.placeholder_title.text() == "BIN 编辑"
-    assert "仅支持命令行" in window.placeholder_message.text()
+    assert window.workspace.currentWidget() is window.edit_page
     window.close()
 
 
@@ -168,7 +166,8 @@ def test_about_dialog_states_verified_scope_and_limits(qapp) -> None:
     assert "Main resource：320 × 384" in text
     assert "Thumbnail resource：210 × 252" in text
     assert "Physical display geometry：UNKNOWN" in text
-    assert "BIN 编辑与 GUI 上传" in text
+    assert "时间位置编辑" in text
+    assert "GUI 上传" in text
     dialog.close()
     window.close()
 
@@ -242,14 +241,14 @@ def test_theme_tokens_and_focus_states_are_centralized() -> None:
     assert "QPushButton#primaryButton:disabled" in _stylesheet()
 
 
-def test_stage_gate_dialog_explicitly_says_not_executed(qapp) -> None:
+def test_stage_gate_dialog_only_locks_builder(qapp) -> None:
     window = make_window(qapp)
     dialog = window.show_stage_gate_dialog()
     qapp.processEvents()
     labels = "\n".join(label.text() for label in dialog.findChildren(QLabel))
     assert "NOT EXECUTED" in labels
     assert "Builder v0.2.4-greenlion-exact" in labels
-    assert "set_time_position()" in labels
+    assert "时间位置编辑可用" in labels
     assert any(button.text() == "关闭" for button in dialog.findChildren(QPushButton))
     dialog.close()
     window.close()
@@ -297,7 +296,7 @@ def test_resource_build_controls_stay_locked_without_builder(qapp) -> None:
     assert all(not control.isEnabled() for control in window.resource_controls)
     assert window.fit_mode.count() == 3
     assert window.fit_mode.itemText(0) == "裁剪填充（cover）"
-    assert not window.generate_button.isEnabled()
+    assert not window.builder_generate_button.isEnabled()
     assert not hasattr(window.controller, "build")
     window.close()
 

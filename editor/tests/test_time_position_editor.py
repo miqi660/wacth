@@ -388,13 +388,16 @@ def test_editor_core_has_no_hardware_or_uploader_imports() -> None:
     )
 
 
-def test_gui_does_not_import_time_position_editor() -> None:
+def test_only_gui_controller_imports_time_position_editor() -> None:
     gui_root = ROOT / "src" / "ultra3_editor" / "gui"
     for path in gui_root.glob("*.py"):
         tree = ast.parse(path.read_text(encoding="utf-8"))
+        imports_editor = False
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):
-                assert node.module != "ultra3_editor.time_position"
-                assert all(alias.name != "set_time_position" for alias in node.names)
+                if any(alias.name == "set_time_position" for alias in node.names):
+                    imports_editor = True
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
-                assert node.func.id != "set_time_position"
+                if node.func.id == "set_time_position":
+                    assert path.name == "controllers.py"
+        assert imports_editor is (path.name == "controllers.py")
