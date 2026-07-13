@@ -1,0 +1,2 @@
+{"timestamp":"2026-07-13T09:07:38.512956+00:00","event":"scan_started","direction":"INFO","state":"SCANNING","device_id":null,"uuid":null,"length":null,"hex":null,"command":null,"error":null,"timeout":30.0,"target_name":"ULTRA 3"}
+{"timestamp":"2026-07-13T09:08:08.561737+00:00","event":"scan_completed","direction":"INFO","state":"DISCONNECTED","device_id":null,"uuid":null,"length":null,"hex":null,"command":null,"error":null,"device_count":3,"matching_count":1}

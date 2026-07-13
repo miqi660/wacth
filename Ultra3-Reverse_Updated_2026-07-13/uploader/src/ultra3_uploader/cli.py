@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import json
 import sys
 from pathlib import Path
 
 from .bcsdial import BCSDIALPayload
 from .capture_parser import compare_capture, parse_capture
+from .constants import DEFAULT_DEVICE_NAME, REQUIRED_WRITE_WITHOUT_RESPONSE_SIZE
 from .errors import OutputExistsError, Ultra3UploaderError
 
 
@@ -88,7 +90,142 @@ def make_parser() -> argparse.ArgumentParser:
     compare_parser = subparsers.add_parser("compare-capture")
     compare_parser.add_argument("--file", required=True)
     compare_parser.add_argument("--capture", required=True)
+    scan_parser = subparsers.add_parser("scan")
+    scan_parser.add_argument("--timeout", type=float, default=10.0)
+    scan_parser.add_argument("--name", default=DEFAULT_DEVICE_NAME)
+    scan_parser.add_argument("--json", action="store_true")
+    scan_parser.add_argument("--log-file", type=Path)
+    info_parser = subparsers.add_parser("info")
+    info_parser.add_argument("--device", required=True)
+    info_parser.add_argument("--connect-timeout", type=float, default=20.0)
+    info_parser.add_argument("--log-file", type=Path)
+    listen_parser = subparsers.add_parser("listen")
+    listen_parser.add_argument("--device", required=True)
+    listen_parser.add_argument("--seconds", type=float, default=30.0)
+    listen_parser.add_argument("--connect-timeout", type=float, default=20.0)
+    listen_parser.add_argument("--log-file", type=Path)
+    subparsers.add_parser("transport-self-test")
     return parser
+
+
+def _logger(path: Path | None) -> "Stage5Logger":
+    from .logging_utils import Stage5Logger
+
+    return Stage5Logger(path, human_output=False)
+
+
+async def _scan_command(args: argparse.Namespace) -> int:
+    from .bleak_transport import BleakTransport
+    from .stage5 import run_scan
+
+    result = await run_scan(
+        BleakTransport(), timeout=args.timeout, target_name=args.name, logger=_logger(args.log_file)
+    )
+    rows = [
+        {
+            "name": device.name,
+            "device_id": device.device_id,
+            "rssi": device.rssi,
+            "matches_target": device.name == args.name,
+            "platform": device.platform,
+        }
+        for device in result.devices
+    ]
+    if args.json:
+        print(json.dumps({
+            "target_name": args.name,
+            "matching_count": result.matching_count,
+            "devices": rows,
+        }, ensure_ascii=False, indent=2))
+    else:
+        for row in rows:
+            rssi = row["rssi"] if row["rssi"] is not None else "unknown"
+            print(
+                f"名称={row['name'] or 'unknown'} 设备ID={row['device_id']} "
+                f"RSSI={rssi} 匹配={row['matches_target']}"
+            )
+        print(f"目标名称重复数量: {result.matching_count}")
+    return 0 if result.matching_count else 1
+
+
+def _print_gatt(validation: "GattValidation", disconnected: bool) -> int:
+    checks = (
+        (validation.service_found, "service found"),
+        (validation.ff02_found, "FF02 found"),
+        (validation.ff02_write_without_response, "FF02 supports write without response"),
+        (validation.ff03_found, "FF03 found"),
+        (validation.ff03_notify, "FF03 supports notify"),
+    )
+    print("[OK] connected")
+    for ok, label in checks:
+        print(f"[{'OK' if ok else 'FAIL'}] {label}")
+    maximum = validation.maximum_write_without_response
+    print(f"[INFO] maximum write without response: {maximum if maximum is not None else 'unknown'}")
+    if maximum is None:
+        print("[WARN] cannot confirm 237-byte Write Without Response capacity")
+    elif maximum < REQUIRED_WRITE_WITHOUT_RESPONSE_SIZE:
+        print("[FAIL] maximum write without response is below 237 bytes")
+    print(f"[INFO] MTU: {validation.mtu_size if validation.mtu_size is not None else 'unknown'}")
+    print(f"[INFO] platform: {validation.platform}")
+    print(f"[{'OK' if disconnected else 'FAIL'}] disconnected")
+    return 0 if validation.required_gatt_ok and not validation.capacity_below_required and disconnected else 1
+
+
+async def _info_command(args: argparse.Namespace) -> int:
+    from .bleak_transport import BleakTransport
+    from .stage5 import run_info
+
+    result = await run_info(
+        BleakTransport(),
+        device_id=args.device,
+        timeout=args.connect_timeout,
+        logger=_logger(args.log_file),
+    )
+    return _print_gatt(result.validation, result.disconnected)
+
+
+async def _listen_command(args: argparse.Namespace) -> int:
+    from .bleak_transport import BleakTransport
+    from .stage5 import run_listen
+
+    result = await run_listen(
+        BleakTransport(),
+        device_id=args.device,
+        seconds=args.seconds,
+        timeout=args.connect_timeout,
+        logger=_logger(args.log_file),
+    )
+    print("[OK] connected")
+    print("[OK] GATT validated")
+    print("[OK] FF03 notify subscribed")
+    print(f"[INFO] notifications: {result.notifications}")
+    print(f"[{'OK' if result.disconnected else 'FAIL'}] disconnected")
+    print("[OK] FF02 writes: 0")
+    return 0 if result.disconnected else 1
+
+
+async def _transport_self_test() -> int:
+    from .constants import FF02_UUID
+    from .fake_transport import FakeBleTransport
+    from .stage5 import run_info, run_listen, run_scan
+
+    transport = FakeBleTransport(notifications_on_subscribe=[bytes.fromhex("BC7203021E001E")])
+    logger = _logger(None)
+    scan = await run_scan(transport, timeout=0, target_name=DEFAULT_DEVICE_NAME, logger=logger)
+    info = await run_info(transport, device_id="FAKE-ULTRA3-1", timeout=1, logger=logger)
+    listen = await run_listen(
+        transport, device_id="FAKE-ULTRA3-1", seconds=0, timeout=1, logger=logger
+    )
+    ok = (
+        scan.matching_count == 1
+        and info.validation.required_gatt_ok
+        and listen.notifications == 1
+        and not transport.writes
+        and all(uuid != FF02_UUID for uuid, _data in transport.writes)
+    )
+    print(f"[{'OK' if ok else 'FAIL'}] fake scan/connect/GATT/notify/disconnect")
+    print(f"[{'OK' if not transport.writes else 'FAIL'}] FF02 writes: {len(transport.writes)}")
+    return 0 if ok else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -98,8 +235,18 @@ def main(argv: list[str] | None = None) -> int:
             return inspect_file(args.file)
         if args.command == "build":
             return build_packets(args.file, args.output, args.force)
-        return compare(args.file, args.capture)
+        if args.command == "compare-capture":
+            return compare(args.file, args.capture)
+        if args.command == "scan":
+            return asyncio.run(_scan_command(args))
+        if args.command == "info":
+            return asyncio.run(_info_command(args))
+        if args.command == "listen":
+            return asyncio.run(_listen_command(args))
+        return asyncio.run(_transport_self_test())
+    except KeyboardInterrupt:
+        print("已取消；BLE 清理流程已执行。", file=sys.stderr)
+        return 130
     except Ultra3UploaderError as exc:
         print(f"错误: {exc}", file=sys.stderr)
         return 2
-
