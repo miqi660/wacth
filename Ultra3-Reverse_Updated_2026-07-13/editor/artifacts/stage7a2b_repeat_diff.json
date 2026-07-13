@@ -1,0 +1,35 @@
+{
+  "before": {
+    "path": "C:\\Users\\Administrator\\Desktop\\wacth\\Ultra3-Reverse_Updated_2026-07-13\\editor\\samples\\stage7a2_diy_root_capture\\A0_repeat_1\\reconstructed.bin",
+    "size": 351617,
+    "sha256": "9305529D6C644C757F6B193671B84153F0ADEBE385E7B3B30552E9BC23513635",
+    "header_hex": "000000FFFFFF00",
+    "footer_hex": "00000000",
+    "header_ascii": "\u0000\u0000\u0000���\u0000",
+    "header_valid": false,
+    "footer_valid": false,
+    "valid": false
+  },
+  "after": {
+    "path": "C:\\Users\\Administrator\\Desktop\\wacth\\Ultra3-Reverse_Updated_2026-07-13\\editor\\samples\\stage7a2_diy_root_capture\\A0_repeat_2\\reconstructed.bin",
+    "size": 351617,
+    "sha256": "9305529D6C644C757F6B193671B84153F0ADEBE385E7B3B30552E9BC23513635",
+    "header_hex": "000000FFFFFF00",
+    "footer_hex": "00000000",
+    "header_ascii": "\u0000\u0000\u0000���\u0000",
+    "header_valid": false,
+    "footer_valid": false,
+    "valid": false
+  },
+  "same_size": true,
+  "changed_byte_count": 0,
+  "unchanged_byte_count": 351617,
+  "changed_percentage": 0.0,
+  "range_count": 0,
+  "first_difference": null,
+  "first_difference_hex": null,
+  "last_difference": null,
+  "last_difference_hex": null,
+  "ranges": [],
+  "known_patch_verified": false
+}
