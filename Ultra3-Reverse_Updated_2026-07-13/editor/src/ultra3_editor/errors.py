@@ -40,3 +40,11 @@ class SessionSelectionError(EditorError):
 
 class ReconstructionError(EditorError):
     """上传会话未通过严格重组验证。"""
+
+
+class UnsupportedStaticDiySizeError(EditorError):
+    """静态 DIY 文件大小不在当前已验证范围。"""
+
+
+class InvalidExistingTimePositionError(EditorError):
+    """静态 DIY 首字节不是已验证的时间位置值。"""

@@ -80,6 +80,8 @@ def make_parser() -> argparse.ArgumentParser:
     static_parser.add_argument("--json", type=Path)
     static_parser.add_argument("--report", type=Path)
     static_parser.set_defaults(container=ContainerKind.GREENLION_STATIC.value)
+
+    commands.add_parser("gui")
     return parser
 
 
@@ -217,6 +219,12 @@ def _reconstruct_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _gui_command() -> int:
+    from .gui.app import run
+
+    return run()
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         args = make_parser().parse_args(argv)
@@ -226,6 +234,8 @@ def main(argv: list[str] | None = None) -> int:
             return _diff_command(args)
         if args.command == "verify-known-patch":
             return _verify_command(args)
+        if args.command == "gui":
+            return _gui_command()
         return _reconstruct_command(args)
     except EditorError as exc:
         print(f"错误: {exc}", file=sys.stderr)

@@ -34,3 +34,21 @@ python -m ultra3_editor reconstruct-c9 "<static-diy-capture.log>" `
 默认 `--container bcsdial` 继续强制 BCSDIAL/BCBC。`greenlion-static` 仅把头尾检查标记为
 `NOT_REQUIRED`，其余 C8/C9/LEN/checksum/sequence/大小校验完全共用；所有 C9 DATA 原样
 拼接，`transformation = none`，不会删除 `LEN=E8` 后的任何 DATA 字节。
+
+## Ultra3 Lab 离线 GUI
+
+Stage 8A 提供 PyQt6 深色只读 GUI 骨架：
+
+```powershell
+python -m pip install ".[gui]"
+python -m ultra3_editor gui
+```
+
+当前源码中尚无 Stage 7B-1 `set_time_position()` 核心，因此 GUI 只允许打开、校验和
+示意预览 351617 字节 GreenLion Static DIY BIN。目标位置、输出路径与生成按钮均被禁用；
+GUI 不修改 BIN、不导入 uploader，也不提供 BLE、adb 或 Frida 功能。
+
+静态 DIY 资源预览使用两个独立的已验证画布：主图 `320 × 384`、缩略图 `210 × 252`，
+比例均为 `5:6`。它们是资源尺寸，不是物理屏幕分辨率；物理显示几何与可见区域均为
+`UNKNOWN`。当前仓库没有 `Builder v0.2.4-greenlion-exact` 公共接口，因此图片导入、适配、
+RGB565 编码、缩略图生成和 BIN 构建保持禁用。
