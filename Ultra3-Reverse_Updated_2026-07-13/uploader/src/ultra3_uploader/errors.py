@@ -40,3 +40,19 @@ class BleDisconnectedError(BleTransportError):
 
 class LogWriteError(Ultra3UploaderError):
     """结构化日志无法写入。"""
+
+
+class PrepareError(Ultra3UploaderError):
+    """动态 BCSDIAL 准备握手失败。"""
+
+
+class PrepareTimeoutError(PrepareError):
+    """准备握手等待已确认通知超时。"""
+
+
+class CountdownError(PrepareError):
+    """BC72 倒计时缺失、无效或乱序。"""
+
+
+class C8ResponseMismatchError(PrepareError):
+    """C8 response 与当前输入文件不匹配。"""

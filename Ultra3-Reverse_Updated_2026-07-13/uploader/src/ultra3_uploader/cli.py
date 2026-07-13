@@ -105,6 +105,13 @@ def make_parser() -> argparse.ArgumentParser:
     listen_parser.add_argument("--connect-timeout", type=float, default=20.0)
     listen_parser.add_argument("--log-file", type=Path)
     subparsers.add_parser("transport-self-test")
+    prepare_parser = subparsers.add_parser("prepare-bcsdial")
+    prepare_parser.add_argument("--device")
+    prepare_parser.add_argument("--file", required=True)
+    prepare_parser.add_argument("--ready-timeout", type=float, default=60.0)
+    prepare_parser.add_argument("--connect-timeout", type=float, default=20.0)
+    prepare_parser.add_argument("--log-file", type=Path)
+    prepare_parser.add_argument("--dry-run", action="store_true")
     return parser
 
 
@@ -228,6 +235,40 @@ async def _transport_self_test() -> int:
     return 0 if ok else 1
 
 
+async def _prepare_command(args: argparse.Namespace) -> int:
+    payload = BCSDIALPayload.from_path(Path(args.file))
+    if args.dry_run:
+        print(f"文件大小: {payload.size}")
+        print(f"包数: {payload.packet_count}")
+        print(f"C8 HEX: {payload.build_prepare_frame().hex().upper()}")
+        print("FF02 writes: 0")
+        return 0
+    if not args.device:
+        raise Ultra3UploaderError("非 dry-run 模式必须提供 --device")
+    if args.ready_timeout <= 0 or args.connect_timeout <= 0:
+        raise Ultra3UploaderError("timeout 必须大于 0")
+    from .bleak_transport import BleakTransport
+    from .prepare_bcsdial import run_prepare_bcsdial
+
+    result = await run_prepare_bcsdial(
+        BleakTransport(),
+        payload,
+        device_id=args.device,
+        ready_timeout=args.ready_timeout,
+        connect_timeout=args.connect_timeout,
+        logger=_logger(args.log_file),
+    )
+    print(f"[OK] C8 sent: {result.c8_hex}")
+    print(f"[OK] BC72 countdown: {len(result.countdown)} packets, 30..0")
+    print(f"[{'OK' if result.d1_received else 'FAIL'}] D1 ready")
+    print(f"[{'OK' if result.c8_response_matched else 'FAIL'}] C8 response matched")
+    print(f"[OK] FF02 writes: {result.ff02_write_count}")
+    print(f"[OK] C9 writes: {result.c9_write_count}")
+    print(f"[OK] CA writes: {result.ca_write_count}")
+    print(f"[{'OK' if result.disconnected else 'FAIL'}] disconnected")
+    return 0 if result.disconnected else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     args = make_parser().parse_args(argv)
     try:
@@ -243,7 +284,9 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(_info_command(args))
         if args.command == "listen":
             return asyncio.run(_listen_command(args))
-        return asyncio.run(_transport_self_test())
+        if args.command == "transport-self-test":
+            return asyncio.run(_transport_self_test())
+        return asyncio.run(_prepare_command(args))
     except KeyboardInterrupt:
         print("已取消；BLE 清理流程已执行。", file=sys.stderr)
         return 130

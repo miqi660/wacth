@@ -28,15 +28,24 @@ Bleak 3.0.2
 Windows release=10 build=22631
 ```
 
-实际命令：
+目标设备最终实机验证：
 
-```powershell
-python -m ultra3_uploader scan --timeout 10 --log-file .\stage5_scan.jsonl
+```text
+Device: ULTRA 3
+测试地址: 26:05:09:12:00:08
+Service: 000001ff-3c17-d293-8e48-14fe2e4da212
+FF02: 0000ff02-0000-1000-8000-00805f9b34fb / Write Without Response
+FF03: 0000ff03-0000-1000-8000-00805f9b34fb / Notify
+最大 Write Without Response: 244 字节
+MTU: 247
+FF03 订阅: 成功
+30 秒通知数: 2
+FF02 writes: 0
+断开: 成功
 ```
 
-结果：发现 2 个附近 BLE 设备，但 `ULTRA 3` 匹配数为 0，命令按设计返回非零退出码。
-因此未执行 `info` 和 `listen`，没有连接任何设备，也没有产生 FF02 写入。原始结构化事件见
-`stage5_scan.jsonl`。
+`stage5_scan.jsonl` 保存的是此前目标设备未处于可发现状态时的一次失败扫描，不代表最终
+实机验证结果。以上最终结果来自后续成功的 `scan → info → listen` 验证记录。
 
 ## Frozen 哈希复核
 
@@ -53,11 +62,7 @@ CD85A7AADDCC6BD85E108335DA0E0D63AF9FF24A88C5478F6E0BEA7E9CD6AE7F
 
 哈希与 Stage 1–4 验收值一致，Frozen 变化为 0。
 
-## 待实机确认
+## 尚未确认的平台行为
 
-- 目标设备的准确 Windows 设备 ID。
-- Service、FF02、FF03 的本机 Bleak 枚举结果。
-- 后端报告的最大 Write Without Response 长度和 MTU。
-- FF03 实机订阅与通知接收。
-
-在扫描明确发现目标设备前，不执行后续实机步骤。
+- Linux 上 BlueZ 对最大无响应写入长度的报告行为。
+- macOS 使用平台设备 UUID 时的同名设备选择与最大写入长度报告。

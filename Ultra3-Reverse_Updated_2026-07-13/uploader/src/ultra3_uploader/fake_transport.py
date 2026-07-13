@@ -39,7 +39,9 @@ class FakeBleTransport:
         connect_error: str | None = None,
         notify_error: str | None = None,
         notifications_on_subscribe: Iterable[bytes] = (),
+        notifications_on_write: Iterable[bytes] = (),
         disconnect_on_subscribe: bool = False,
+        disconnect_on_write: bool = False,
     ) -> None:
         self.devices = list(devices) if devices is not None else [
             BleDevice("FAKE-ULTRA3-1", "ULTRA 3", -45, "fake")
@@ -49,7 +51,9 @@ class FakeBleTransport:
         self.connect_error = connect_error
         self.notify_error = notify_error
         self.notifications_on_subscribe = list(notifications_on_subscribe)
+        self.notifications_on_write = list(notifications_on_write)
         self.disconnect_on_subscribe = disconnect_on_subscribe
+        self.disconnect_on_write = disconnect_on_write
         self.scan_calls: list[float] = []
         self.connect_calls: list[tuple[str, float]] = []
         self.disconnect_calls = 0
@@ -112,6 +116,10 @@ class FakeBleTransport:
         self.writes.append((uuid.lower(), bytes(data)))
         self.write_order.append(len(self.writes) - 1)
         self.write_timestamps.append(datetime.now(timezone.utc).isoformat())
+        for notification in self.notifications_on_write:
+            await self.emit_notification(FF03_UUID, notification)
+        if self.disconnect_on_write:
+            self.simulate_remote_disconnect()
 
     async def wait_disconnected(self) -> None:
         await self._disconnected_event.wait()

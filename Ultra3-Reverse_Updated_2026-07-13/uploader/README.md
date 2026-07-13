@@ -40,3 +40,17 @@ python -m ultra3_uploader transport-self-test
 多个同名 `ULTRA 3` 不会自动选择。GATT 通过 Service、FF02、FF03 的 UUID 定位，固定
 ATT Handle 只属于历史证据，不作为连接依赖。后端无法报告最大无响应写入长度时显示
 `unknown`；小于 237 字节时验证失败。
+
+## Stage 6A：仅验证动态表盘准备握手
+
+```powershell
+python -m ultra3_uploader prepare-bcsdial --file "C:\path\watchface.bin" --dry-run
+python -m ultra3_uploader prepare-bcsdial `
+  --device "<准确设备ID>" `
+  --file "C:\path\watchface.bin" `
+  --ready-timeout 60 `
+  --log-file .\stage6_prepare.jsonl
+```
+
+非 dry-run 模式只发送一个根据当前文件动态生成的 C8，随后验证 BC72 `30..0`、D1 ready
+和匹配的 C8 response。成功后立即退订并断开；不发送 C9，也不发送 CA apply。
