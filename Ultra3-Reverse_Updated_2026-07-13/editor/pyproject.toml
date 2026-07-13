@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ultra3-editor"
+version = "0.1.0"
+description = "Ultra3 BCSDIAL 离线检查与差分核心"
+requires-python = ">=3.10"
+
+[project.scripts]
+ultra3-editor = "ultra3_editor.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
