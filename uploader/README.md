@@ -7,7 +7,7 @@ FF03 安全监听。`scan`、`info`、`listen` 均不会调用 FF02 写入，不
 ## 安装与测试
 
 ```powershell
-cd .\Ultra3-Reverse_Updated_2026-07-13\uploader
+cd .\uploader
 python -m pip install -e .
 python -m pytest
 ```
