@@ -10,6 +10,7 @@ from .ble_transport import (
     GattCharacteristic,
     GattSnapshot,
     NotificationCallback,
+    TransportKind,
 )
 from .constants import CA_APPLY_FRAME, CA_SUCCESS_FRAME, FF02_UUID, FF03_UUID, TARGET_SERVICE_UUID
 from .errors import BleTransportError
@@ -106,6 +107,10 @@ class FakeBleTransport:
         self._callbacks: dict[str, NotificationCallback] = {}
         self._disconnected_event = asyncio.Event()
         self._background_tasks: list[asyncio.Task[None]] = []
+
+    @property
+    def kind(self) -> TransportKind:
+        return TransportKind.FAKE
 
     @property
     def is_connected(self) -> bool:

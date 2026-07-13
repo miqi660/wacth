@@ -5,22 +5,28 @@ from collections.abc import Callable
 
 from .bc_frames import parse_c9
 from .bcsdial import BCSDIALPayload
-from .ble_transport import BleTransport
+from .ble_transport import BleTransport, TransportKind
 from .constants import CA_APPLY_FRAME, FF02_UUID
 from .errors import (
     BleDisconnectedError,
     CAProtocolError,
     UploadCancelledError,
     UploadError,
-    UploadSafetyError,
+    RealUploadNotAuthorizedError,
+    UnsupportedTransportError,
 )
-from .fake_transport import FakeBleTransport
 from .logging_utils import Stage5Logger
 from .prepare_bcsdial import (
     PreparedSession,
     cleanup_session,
     next_notification,
     prepare_bcsdial_session,
+)
+from .real_upload import (
+    RealUploadAuthorization,
+    validate_local_authorization,
+    validate_real_log_binding,
+    validate_runtime_capabilities,
 )
 from .timing import Clock, FakeSleeper, RealClock, RealSleeper, Sleeper
 from .upload_progress import UploadProgress, make_progress
@@ -87,11 +93,32 @@ async def upload_bcsdial(
     logger: Stage5Logger | None = None,
     sleeper: Sleeper | None = None,
     clock: Clock | None = None,
+    authorization: RealUploadAuthorization | None = None,
 ) -> UploadResult:
-    if not isinstance(transport, FakeBleTransport):
-        raise UploadSafetyError("Stage 6B build does not permit real BLE upload.")
     if packet_delay_ms < 0 or ready_timeout <= 0 or ca_timeout <= 0:
         raise UploadError("packet delay 必须非负，timeout 必须大于 0")
+
+    kind = getattr(transport, "kind", None)
+    runtime_preflight = None
+    if kind is TransportKind.FAKE:
+        pass
+    elif kind is TransportKind.REAL:
+        if authorization is None:
+            raise RealUploadNotAuthorizedError("真实 Transport 缺少上传授权")
+        validate_local_authorization(
+            payload,
+            authorization,
+            packet_delay_ms=packet_delay_ms,
+        )
+        validate_real_log_binding(authorization, logger)
+
+        def runtime_preflight(validation: "GattValidation") -> None:
+            validate_runtime_capabilities(validation, authorization)
+    else:
+        raise UnsupportedTransportError(
+            "Stage 6B build does not permit real BLE upload. "
+            f"不支持的 Transport 类型: {kind!r}"
+        )
 
     event_logger = logger or Stage5Logger(human_output=False)
     delay = sleeper or RealSleeper()
@@ -125,6 +152,7 @@ async def upload_bcsdial(
             connect_timeout=connect_timeout,
             logger=event_logger,
             sent_frames=frames,
+            runtime_preflight=runtime_preflight,
         )
         maximum = session.maximum_write_without_response
         if maximum is None:

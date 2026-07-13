@@ -13,6 +13,7 @@ from .ble_transport import (
     GattCharacteristic,
     GattSnapshot,
     NotificationCallback,
+    TransportKind,
 )
 from .constants import FF02_UUID, FF03_UUID, TARGET_SERVICE_UUID
 from .errors import BleTransportError
@@ -36,6 +37,10 @@ class BleakTransport:
         self._disconnected_event = asyncio.Event()
         self._loop: asyncio.AbstractEventLoop | None = None
         self.platform = platform_description()
+
+    @property
+    def kind(self) -> TransportKind:
+        return TransportKind.REAL
 
     @property
     def is_connected(self) -> bool:

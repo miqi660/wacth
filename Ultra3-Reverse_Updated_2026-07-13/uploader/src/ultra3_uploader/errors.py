@@ -66,6 +66,46 @@ class UploadSafetyError(UploadError):
     """Stage 6B 真实 BLE 上传安全锁被触发。"""
 
 
+class RealUploadError(UploadSafetyError):
+    """真实上传授权或安全检查失败。"""
+
+
+class RealUploadNotAuthorizedError(RealUploadError):
+    """缺少真实上传显式确认。"""
+
+
+class ExpectedSha256RequiredError(RealUploadError):
+    """真实上传缺少期望 SHA-256。"""
+
+
+class InvalidSha256Error(RealUploadError):
+    """期望 SHA-256 格式无效。"""
+
+
+class PayloadSha256MismatchError(RealUploadError):
+    """输入文件 SHA-256 与授权值不匹配。"""
+
+
+class RealUploadPacketDelayError(RealUploadError):
+    """真实上传包间隔不符合当前安全要求。"""
+
+
+class MtuTooSmallError(RealUploadError):
+    """MTU 未知或小于真实上传安全下限。"""
+
+
+class WriteSizeTooSmallError(RealUploadError):
+    """最大无响应写入长度未知或小于安全下限。"""
+
+
+class LogFileExistsError(RealUploadError):
+    """真实上传日志已存在，禁止覆盖。"""
+
+
+class UnsupportedTransportError(RealUploadError):
+    """上传 Transport 类型未知或不受支持。"""
+
+
 class UploadCancelledError(UploadError):
     """上传被显式取消。"""
 

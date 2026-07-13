@@ -117,7 +117,11 @@ def validate_gatt(snapshot: GattSnapshot) -> GattValidation:
     )
 
 
-def require_valid_gatt(validation: GattValidation) -> None:
+def require_valid_gatt(
+    validation: GattValidation,
+    *,
+    require_capacity: bool = True,
+) -> None:
     if not validation.service_found:
         raise GattValidationError("找不到目标 Service")
     if not validation.ff02_found:
@@ -128,7 +132,7 @@ def require_valid_gatt(validation: GattValidation) -> None:
         raise GattValidationError("找不到 FF03")
     if not validation.ff03_notify:
         raise GattValidationError("FF03 不支持 Notify")
-    if validation.capacity_below_required:
+    if require_capacity and validation.capacity_below_required:
         raise GattValidationError(
             "maximum write without response is below 237 bytes"
         )

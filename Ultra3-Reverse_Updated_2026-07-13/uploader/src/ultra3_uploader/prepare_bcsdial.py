@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from .bcsdial import BCSDIALPayload
@@ -15,10 +17,11 @@ from .errors import (
 )
 from .logging_utils import Stage5Logger
 from .notification_parser import NotificationRecord, parse_notification
-from .stage5 import require_valid_gatt, validate_gatt
+from .stage5 import GattValidation, require_valid_gatt, validate_gatt
 from .upload_state import UploadState
 
 EXPECTED_COUNTDOWN = tuple(range(30, -1, -1))
+RuntimePreflight = Callable[[GattValidation], None | Awaitable[None]]
 
 
 @dataclass
@@ -206,6 +209,7 @@ async def prepare_bcsdial_session(
     connect_timeout: float,
     logger: Stage5Logger,
     sent_frames: list[bytes] | None = None,
+    runtime_preflight: RuntimePreflight | None = None,
 ) -> PreparedSession:
     payload.validate()
     context = NotificationContext(asyncio.Queue(), logger, device_id)
@@ -224,7 +228,10 @@ async def prepare_bcsdial_session(
         logger.emit("connected", state=context.state, device_id=device_id)
 
         validation = validate_gatt(await transport.discover())
-        require_valid_gatt(validation)
+        require_valid_gatt(
+            validation,
+            require_capacity=runtime_preflight is None,
+        )
         context.state = UploadState.GATT_VALIDATED
         logger.emit(
             "gatt_validated",
@@ -243,6 +250,18 @@ async def prepare_bcsdial_session(
             device_id=device_id,
             uuid=FF03_UUID,
         )
+
+        if runtime_preflight is not None:
+            preflight_result = runtime_preflight(validation)
+            if inspect.isawaitable(preflight_result):
+                await preflight_result
+            logger.emit(
+                "runtime_preflight_passed",
+                state=context.state,
+                device_id=device_id,
+                maximum_write_without_response=validation.maximum_write_without_response,
+                mtu_size=validation.mtu_size,
+            )
 
         await transport.write_without_response(FF02_UUID, c8_request)
         frames.append(c8_request)

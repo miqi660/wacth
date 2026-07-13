@@ -1,4 +1,4 @@
-# Ultra3 Uploader v0.3.0（Stage 1–5）
+# Ultra3 Uploader v0.3.0（Stage 6C-A）
 
 当前版本提供动态 `BCSDIAL` 离线协议工具，以及 Stage 5 的 BLE 扫描、GATT 检查和
 FF03 安全监听。`scan`、`info`、`listen` 均不会调用 FF02 写入，不发送 C8、C9 或 CA，
@@ -67,13 +67,19 @@ python -m ultra3_uploader simulate-upload-bcsdial `
 模拟命令只创建 `FakeBleTransport`，不会导入或初始化真实 BLE 后端。每个 C9 串行发送，
 完整 HEX 写入 JSONL；FakeSleeper 记录 45 ms 节奏但立即返回。
 
-Stage 6B 的真实上传保持硬锁：
+`upload-bcsdial` 的 dry-run 只校验本地文件，不创建日志或 BLE Transport：
 
 ```powershell
-python -m ultra3_uploader upload-bcsdial --file "C:\path\watchface.bin"
-# 错误：Stage 6B build does not permit real BLE upload.
-
 python -m ultra3_uploader upload-bcsdial --file "C:\path\watchface.bin" --dry-run
 ```
 
-只有后续 Stage 6C 明确解除安全锁后，才允许连接真实设备进行完整上传。
+## Stage 6C-A：真实上传安全门（仅离线评审）
+
+Fake 与 REAL Transport 共用同一个 `upload_bcsdial()` 状态机。REAL Transport 默认拒绝，
+只有本地文件、显式确认、期望 SHA-256、严格 45 ms 包间隔和独占日志全部通过后才会创建
+Transport；连接后还必须在 C8 前通过 Service/FF02/FF03、MTU >= 240 和最大无响应写入
+长度 >= 237 的运行时检查。
+
+真实模式没有 `--force`、自动重试或断点续传。任何失败都会停止后续 C9，不发送 CA apply，
+并执行通知退订和安全断开。本阶段只完成代码和内存 Stub 测试，未执行任何非 dry-run 的
+`upload-bcsdial` 命令；真机执行属于后续 Stage 6C-B。

@@ -130,6 +130,12 @@ def make_parser() -> argparse.ArgumentParser:
     upload_parser = subparsers.add_parser("upload-bcsdial")
     upload_parser.add_argument("--device")
     upload_parser.add_argument("--file", required=True)
+    upload_parser.add_argument("--packet-delay-ms", type=float, default=45.0)
+    upload_parser.add_argument("--ready-timeout", type=float, default=60.0)
+    upload_parser.add_argument("--ca-timeout", type=float, default=30.0)
+    upload_parser.add_argument("--expected-sha256")
+    upload_parser.add_argument("--confirm-real-upload", action="store_true")
+    upload_parser.add_argument("--log-file", type=Path)
     upload_parser.add_argument("--dry-run", action="store_true")
     return parser
 
@@ -366,18 +372,69 @@ async def _simulate_upload_command(args: argparse.Namespace) -> int:
     return 0 if result.success else 1
 
 
-def _upload_dry_run_command(args: argparse.Namespace) -> int:
-    from .errors import UploadSafetyError
+def _create_real_transport() -> "BleakTransport":
+    from .bleak_transport import BleakTransport
+
+    return BleakTransport()
+
+
+async def _upload_command(args: argparse.Namespace) -> int:
+    from .real_upload import (
+        RealUploadAuthorization,
+        reserve_log_file,
+        validate_local_authorization,
+    )
+    from .upload_bcsdial import upload_bcsdial
 
     payload = BCSDIALPayload.from_path(Path(args.file))
-    if not args.dry_run:
-        raise UploadSafetyError("Stage 6B build does not permit real BLE upload.")
-    print(f"文件大小: {payload.size}")
-    print(f"包数: {payload.packet_count}")
-    print(f"C8 HEX: {payload.build_prepare_frame().hex().upper()}")
-    print("真实 BLE 连接: 0")
-    print("FF02 writes: 0")
-    return 0
+    if args.dry_run:
+        print("[OK] BCSDIAL header")
+        print("[OK] BCBC footer")
+        print(f"[OK] file size: {payload.size}")
+        print(f"[OK] SHA-256: {payload.sha256}")
+        print(f"[OK] packet count: {payload.packet_count}")
+        print(f"[OK] C8: {payload.build_prepare_frame().hex().upper()}")
+        print("[OK] real BLE connections: 0（真实 BLE 连接: 0）")
+        print("[OK] FF02 writes: 0")
+        return 0
+
+    authorization = RealUploadAuthorization(
+        confirmed=args.confirm_real_upload,
+        expected_sha256=args.expected_sha256,
+        log_file=args.log_file,
+    )
+    validate_local_authorization(
+        payload,
+        authorization,
+        packet_delay_ms=args.packet_delay_ms,
+    )
+    if not args.device:
+        raise Ultra3UploaderError("真实上传必须提供 --device")
+    if args.log_file is None:
+        raise Ultra3UploaderError("真实上传必须提供 --log-file")
+    if args.ready_timeout <= 0 or args.ca_timeout <= 0:
+        raise Ultra3UploaderError("timeout 必须大于 0")
+    reserve_log_file(args.log_file)
+
+    transport = _create_real_transport()
+    result = await upload_bcsdial(
+        transport,
+        payload,
+        device_id=args.device,
+        packet_delay_ms=args.packet_delay_ms,
+        ready_timeout=args.ready_timeout,
+        ca_timeout=args.ca_timeout,
+        logger=_logger(args.log_file),
+        authorization=authorization,
+    )
+    print(f"[{'OK' if result.success else 'FAIL'}] final state: {result.final_state.value}")
+    print(f"[INFO] C8 writes: {result.c8_writes}")
+    print(f"[INFO] C9 writes: {result.c9_writes}")
+    print(f"[INFO] CA writes: {result.ca_writes}")
+    print(f"[INFO] total FF02 writes: {result.total_writes}")
+    if result.error_message:
+        print(f"[FAIL] {result.error_type}: {result.error_message}")
+    return 0 if result.success else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -401,7 +458,7 @@ def main(argv: list[str] | None = None) -> int:
             return asyncio.run(_prepare_command(args))
         if args.command == "simulate-upload-bcsdial":
             return asyncio.run(_simulate_upload_command(args))
-        return _upload_dry_run_command(args)
+        return asyncio.run(_upload_command(args))
     except KeyboardInterrupt:
         print("已取消；BLE 清理流程已执行。", file=sys.stderr)
         return 130

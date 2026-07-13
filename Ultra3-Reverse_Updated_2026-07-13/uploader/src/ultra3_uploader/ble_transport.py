@@ -2,9 +2,15 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from enum import Enum
 from typing import Protocol
 
 NotificationCallback = Callable[[bytes], None | Awaitable[None]]
+
+
+class TransportKind(str, Enum):
+    FAKE = "FAKE"
+    REAL = "REAL"
 
 
 @dataclass(frozen=True)
@@ -34,6 +40,9 @@ class GattSnapshot:
 
 
 class BleTransport(Protocol):
+    @property
+    def kind(self) -> TransportKind: ...
+
     async def scan(self, timeout: float) -> list[BleDevice]: ...
 
     async def connect(self, device_id: str, timeout: float) -> None: ...
@@ -52,4 +61,3 @@ class BleTransport(Protocol):
 
     @property
     def is_connected(self) -> bool: ...
-
