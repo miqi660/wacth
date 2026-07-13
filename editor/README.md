@@ -25,6 +25,13 @@ python -m ultra3_editor reconstruct-c9 "<static-diy-capture.log>" `
   --output .\reconstructed.bin `
   --json .\reconstruction.json `
   --report .\reconstruction.md
+
+python -m ultra3_editor set-time-position `
+  --input "<351617 字节 GreenLion Static DIY BIN>" `
+  --position bottom `
+  --output .\edited.bin `
+  --json .\edited.json `
+  --report .\edited.md
 ```
 
 报告使用独占创建，已存在时拒绝覆盖，不提供 `--force`。输入 BIN 始终只读。
@@ -35,6 +42,16 @@ python -m ultra3_editor reconstruct-c9 "<static-diy-capture.log>" `
 `NOT_REQUIRED`，其余 C8/C9/LEN/checksum/sequence/大小校验完全共用；所有 C9 DATA 原样
 拼接，`transformation = none`，不会删除 `LEN=E8` 后的任何 DATA 字节。
 
+## Stage 7B-1：时间位置公共编辑核心
+
+`set-time-position` 只接受严格小写的 `top` 或 `bottom`，并复用静态 DIY 检查器验证输入和
+写后输出。当前已验证映射只有 offset `0x00000000` 的单字节 `00 = top`、`01 = bottom`；
+其余 351616 字节必须逐字节不变。请求与输入位置相同时直接拒绝，不生成输出。
+
+BIN、JSON 和 Markdown 均使用独占创建，任何目标已存在时拒绝覆盖。任一步写入或复验失败
+都会删除本次调用已创建的文件，不删除输入或调用前已有文件。该核心是纯离线 API，不导入
+uploader，不调用 BLE、adb、Frida 或 Builder。
+
 ## Ultra3 Lab 离线 GUI
 
 Stage 8A 提供 PyQt6 深色只读 GUI 骨架：
@@ -44,9 +61,9 @@ python -m pip install ".[gui]"
 python -m ultra3_editor gui
 ```
 
-当前源码中尚无 Stage 7B-1 `set_time_position()` 核心，因此 GUI 只允许打开、校验和
-示意预览 351617 字节 GreenLion Static DIY BIN。目标位置、输出路径与生成按钮均被禁用；
-GUI 不修改 BIN、不导入 uploader，也不提供 BLE、adb 或 Frida 功能。
+Stage 7B-1 已提供独立的 `set_time_position()` 公共核心，但尚未接入 Stage 8A GUI。GUI
+仍只允许打开、校验和示意预览 351617 字节 GreenLion Static DIY BIN；目标位置、输出路径
+与生成按钮继续禁用。GUI 不修改 BIN、不导入 uploader，也不提供 BLE、adb 或 Frida 功能。
 
 静态 DIY 资源预览使用两个独立的已验证画布：主图 `320 × 384`、缩略图 `210 × 252`，
 比例均为 `5:6`。它们是资源尺寸，不是物理屏幕分辨率；物理显示几何与可见区域均为

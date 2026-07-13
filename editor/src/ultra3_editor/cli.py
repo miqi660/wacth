@@ -26,6 +26,8 @@ from .reports import (
     write_json_report,
     write_markdown_report,
 )
+from .static_diy import TimePosition
+from .time_position import set_time_position
 
 
 def make_parser() -> argparse.ArgumentParser:
@@ -80,6 +82,17 @@ def make_parser() -> argparse.ArgumentParser:
     static_parser.add_argument("--json", type=Path)
     static_parser.add_argument("--report", type=Path)
     static_parser.set_defaults(container=ContainerKind.GREENLION_STATIC.value)
+
+    edit_parser = commands.add_parser("set-time-position")
+    edit_parser.add_argument("--input", type=Path, required=True)
+    edit_parser.add_argument(
+        "--position",
+        choices=[position.value for position in TimePosition],
+        required=True,
+    )
+    edit_parser.add_argument("--output", type=Path, required=True)
+    edit_parser.add_argument("--json", type=Path)
+    edit_parser.add_argument("--report", type=Path)
 
     commands.add_parser("gui")
     return parser
@@ -225,6 +238,36 @@ def _gui_command() -> int:
     return run()
 
 
+def _set_time_position_command(args: argparse.Namespace) -> int:
+    result = set_time_position(
+        args.input,
+        args.output,
+        TimePosition(args.position),
+        args.json,
+        args.report,
+    )
+    exact = (
+        str(result.exact_golden_match).lower()
+        if isinstance(result.exact_golden_match, bool)
+        else result.exact_golden_match.replace("_", "-")
+    )
+    print(f"[OK] feature: {result.feature}")
+    print(f"[OK] container: {result.container}")
+    print(f"[OK] input position: {result.detected_input_position.value}")
+    print(f"[OK] output position: {result.output_position.value}")
+    print(f"[OK] offset: {result.field_offset_hex}")
+    print(f"[OK] value: {result.before_hex} -> {result.after_hex}")
+    print(f"[OK] changed bytes: {result.changed_byte_count}")
+    print(f"[OK] unchanged bytes: {result.unchanged_byte_count}")
+    print(f"[OK] output size: {result.output_size}")
+    print(f"[OK] output SHA-256: {result.output_sha256}")
+    print(f"[OK] input unchanged: {str(result.input_unchanged).lower()}")
+    print(f"[OK] output revalidated: {str(result.output_revalidated).lower()}")
+    print(f"[OK] exact golden match: {exact}")
+    print(f"[OK] real BLE usage: {result.real_ble_usage}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         args = make_parser().parse_args(argv)
@@ -236,6 +279,8 @@ def main(argv: list[str] | None = None) -> int:
             return _verify_command(args)
         if args.command == "gui":
             return _gui_command()
+        if args.command == "set-time-position":
+            return _set_time_position_command(args)
         return _reconstruct_command(args)
     except EditorError as exc:
         print(f"错误: {exc}", file=sys.stderr)

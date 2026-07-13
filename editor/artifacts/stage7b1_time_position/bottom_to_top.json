@@ -1,0 +1,39 @@
+{
+  "status": "COMPLETE",
+  "feature": "set-time-position",
+  "container": "greenlion-static",
+  "scope": "GreenLion Static DIY / NJ-LEJ-2.1.7 / 351617-byte reconstructed BIN",
+  "input_path": "C:\\Users\\Administrator\\Desktop\\wacth\\editor\\samples\\stage7a2_diy_root_capture\\P1_time_bottom\\reconstructed.bin",
+  "input_size": 351617,
+  "input_sha256_before": "3B8302F6746AB2B78FA48599328DB7907788FA322D18ADF297280C8A5D3370C0",
+  "input_sha256_after": "3B8302F6746AB2B78FA48599328DB7907788FA322D18ADF297280C8A5D3370C0",
+  "input_unchanged": true,
+  "detected_input_position": "bottom",
+  "requested_position": "top",
+  "output_position": "top",
+  "output_path": "C:\\Users\\Administrator\\Desktop\\wacth\\editor\\artifacts\\stage7b1_time_position\\bottom_to_top.bin",
+  "output_size": 351617,
+  "output_sha256": "9305529D6C644C757F6B193671B84153F0ADEBE385E7B3B30552E9BC23513635",
+  "field_offset": 0,
+  "field_offset_hex": "0x00000000",
+  "field_width": 1,
+  "before_hex": "01",
+  "after_hex": "00",
+  "changed_byte_count": 1,
+  "changed_offsets": [
+    0
+  ],
+  "unchanged_byte_count": 351616,
+  "output_revalidated": true,
+  "validation_passed": true,
+  "exact_golden_match": true,
+  "golden_target_sha256": "9305529D6C644C757F6B193671B84153F0ADEBE385E7B3B30552E9BC23513635",
+  "real_ble_usage": 0,
+  "errors": [],
+  "external_usage": {
+    "ble": 0,
+    "adb": 0,
+    "frida": 0,
+    "uploader": 0
+  }
+}

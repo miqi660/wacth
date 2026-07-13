@@ -48,3 +48,27 @@ class UnsupportedStaticDiySizeError(EditorError):
 
 class InvalidExistingTimePositionError(EditorError):
     """静态 DIY 首字节不是已验证的时间位置值。"""
+
+
+class TimePositionEditError(EditorError):
+    """GreenLion Static DIY 时间位置编辑失败。"""
+
+
+class NoChangeRequestedError(TimePositionEditError):
+    """请求的位置与输入文件当前位置相同。"""
+
+
+class InputOutputSamePathError(TimePositionEditError):
+    """输入文件与任一输出目标指向同一路径。"""
+
+
+class EditOutputExistsError(TimePositionEditError):
+    """编辑输出目标已存在，拒绝覆盖。"""
+
+
+class EditVerificationError(TimePositionEditError):
+    """编辑结果写入后未通过复验。"""
+
+
+class UnexpectedChangedBytesError(EditVerificationError):
+    """编辑结果改变了 offset 0 之外的字节。"""
