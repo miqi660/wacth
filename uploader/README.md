@@ -1,4 +1,4 @@
-# Ultra3 Uploader v0.3.0（Stage 6C-A）
+# Ultra3 Uploader v0.3.0
 
 当前版本提供动态 `BCSDIAL` 离线协议工具，以及 Stage 5 的 BLE 扫描、GATT 检查和
 FF03 安全监听。`scan`、`info`、`listen` 均不会调用 FF02 写入，不发送 C8、C9 或 CA，
@@ -49,6 +49,30 @@ python -m ultra3_uploader validate-handoff `
 `safe_to_prepare_transfer=true` 只表示离线 Handoff 满足未来传输准备的前置条件，不表示静态
 payload/C9 已实现，不表示可连接设备或执行真实上传。该命令不创建输出文件，不初始化 BLE，
 也不接受 `--device`、`--upload`、`--force` 或 payload 相关参数。
+
+### Stage 8C-3A：静态 Handoff 离线传输计划
+
+Stage 8C-3A 只构建和验证离线 C9 帧，不连接 BLE。Handoff v1 仍只描述 351617-byte source BIN，
+因此 payload 必须通过独立路径和期望 SHA-256 显式提供，不能从 source BIN 暗中派生：
+
+```powershell
+python -m ultra3_uploader build-static-plan `
+  --manifest .\watchface.handoff.json `
+  --payload .\payload_353146.bin `
+  --expected-payload-sha256 "<64位SHA-256>" `
+  --bundle-root . `
+  --target-firmware NJ-LEJ-2.1.7 `
+  --output .\static-plan `
+  --json
+
+python -m ultra3_uploader inspect-static-plan --plan .\static-plan --json
+python -m ultra3_uploader verify-static-plan --plan .\static-plan --json
+```
+
+计划目录固定包含 `manifest.json` 和 `c9_frames.bin`，使用独占创建且不支持覆盖。manifest 不含
+设备地址、当前时间或本机绝对路径；C8 和 CA 明确记录为 `not_implemented`。所有 C9 均复用
+现有 `build_c9()`、`parse_c9()` 与 checksum 实现。此能力不构成静态真机上传，也不接受
+`--device`、不初始化 Bleak、不读取 FF03、不写 FF02。
 
 ## Stage 5 BLE 命令
 

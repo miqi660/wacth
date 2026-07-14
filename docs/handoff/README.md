@@ -8,9 +8,9 @@
 | 项目 | 当前状态 | 证据等级 |
 |---|---|---|
 | 动态 BCSDIAL 完整文件 | Uploader 接受；必须有 `BCSDIAL` 头和 `BCBC` 尾 | IMPLEMENTED / VERIFIED BY TEST |
-| GreenLion Static DIY 完整 BIN（351617） | 当前 Uploader 拒绝，尚无 Handoff 入口 | NOT SUPPORTED |
-| 冻结 Builder 派生 payload（353146） | 当前 Uploader 不接受；它不是完整 C9 帧流 | NOT SUPPORTED |
-| 已组装 C9 帧 | 当前 Uploader 不接受；现有代码自行构造 C9 | NOT SUPPORTED |
+| GreenLion Static DIY 完整 BIN（351617） | Handoff v1 离线验证入口已实现 | OFFLINE VALIDATION ONLY |
+| 冻结 Builder 派生 payload（353146） | 仅可作为显式、哈希锁定的离线计划输入；不是完整 C9 帧流 | OFFLINE PLAN ONLY |
+| 已组装 C9 帧 | 可生成和离线复核确定性计划；不发送 BLE | OFFLINE PLAN ONLY |
 | 静态 DIY 真机上传 | 尚未由当前 Uploader 实现或验证 | UNKNOWN |
 
 现有 Uploader 对其支持的动态 BCSDIAL 文件直接按 230 字节切块，计算 sequence checksum，
@@ -103,7 +103,8 @@ CLI 只先实现离线预检：
 python -m ultra3_uploader validate-handoff --manifest .\watchface.handoff.json
 ```
 
-`upload-handoff` 不属于 Stage 8C-0。
+`upload-handoff` 仍未实现。Stage 8C-3A 只增加显式 payload 到确定性 C9 frame plan 的离线构建、
+检查和复核，不连接设备，不改变 Handoff v1 的 source artifact 语义。
 
 ## 所有权与错误边界
 

@@ -95,6 +95,20 @@ def make_parser() -> argparse.ArgumentParser:
     handoff_parser.add_argument("--bundle-root", type=Path)
     handoff_parser.add_argument("--target-firmware")
     handoff_parser.add_argument("--json", action="store_true")
+    static_build_parser = subparsers.add_parser("build-static-plan")
+    static_build_parser.add_argument("--manifest", type=Path, required=True)
+    static_build_parser.add_argument("--payload", type=Path, required=True)
+    static_build_parser.add_argument("--expected-payload-sha256", required=True)
+    static_build_parser.add_argument("--bundle-root", type=Path)
+    static_build_parser.add_argument("--target-firmware", default="NJ-LEJ-2.1.7")
+    static_build_parser.add_argument("--output", type=Path, required=True)
+    static_build_parser.add_argument("--json", action="store_true")
+    static_inspect_parser = subparsers.add_parser("inspect-static-plan")
+    static_inspect_parser.add_argument("--plan", type=Path, required=True)
+    static_inspect_parser.add_argument("--json", action="store_true")
+    static_verify_parser = subparsers.add_parser("verify-static-plan")
+    static_verify_parser.add_argument("--plan", type=Path, required=True)
+    static_verify_parser.add_argument("--json", action="store_true")
     scan_parser = subparsers.add_parser("scan")
     scan_parser.add_argument("--timeout", type=float, default=10.0)
     scan_parser.add_argument("--name", default=DEFAULT_DEVICE_NAME)
@@ -187,6 +201,66 @@ def _validate_handoff_command(args: argparse.Namespace) -> int:
         print(f"external usage: {json.dumps(handoff_result_to_dict(result)['external_usage'], ensure_ascii=False, sort_keys=True)}")
         print("boundary: 离线预检通过不表示静态传输协议、真机连接或真实上传可用")
     return 0 if result.status is HandoffValidationStatus.VALID else 1
+
+
+def _print_static_verification(result, *, json_output: bool) -> None:
+    from .static_transfer import verification_to_dict
+
+    document = verification_to_dict(result)
+    if json_output:
+        print(json.dumps(document, ensure_ascii=False, indent=2))
+        return
+    print(f"result: {document['result']}")
+    print(f"payload size: {document['payload_size']}")
+    print(f"payload SHA-256: {document['payload_sha256']}")
+    print(f"C9 frames: {document['c9_frame_count']}")
+    print(f"sequence: {document['sequence_range']}")
+    print(f"missing: {document['missing']}")
+    print(f"duplicates: {document['duplicates']}")
+    print(f"checksum failures: {document['checksum_failures']}")
+    print(f"exact match: {document['exact_match']}")
+
+
+def _build_static_plan_command(args: argparse.Namespace) -> int:
+    from .static_transfer import build_static_transfer_plan, write_static_transfer_plan
+
+    plan = build_static_transfer_plan(
+        args.manifest,
+        payload_path=args.payload,
+        expected_payload_sha256=args.expected_payload_sha256,
+        bundle_root=args.bundle_root,
+        target_firmware=args.target_firmware,
+    )
+    write_static_transfer_plan(plan, args.output)
+    _print_static_verification(plan.verification, json_output=args.json)
+    return 0
+
+
+def _inspect_static_plan_command(args: argparse.Namespace) -> int:
+    from .static_transfer import inspect_static_plan
+
+    document = inspect_static_plan(args.plan)
+    if args.json:
+        print(json.dumps(document, ensure_ascii=False, indent=2))
+    else:
+        print(f"format: {document['format']}")
+        print(f"firmware: {document['firmware']}")
+        print(f"source size: {document['source']['size']}")
+        print(f"source SHA-256: {document['source']['sha256']}")
+        print(f"payload size: {document['payload']['size']}")
+        print(f"payload SHA-256: {document['payload']['sha256']}")
+        print(f"C9 frames: {document['c9']['frame_count']}")
+        print(f"C8: {document['c8']['status']}")
+        print(f"CA: {document['ca']['status']}")
+    return 0
+
+
+def _verify_static_plan_command(args: argparse.Namespace) -> int:
+    from .static_transfer import verify_static_plan
+
+    result = verify_static_plan(args.plan)
+    _print_static_verification(result, json_output=args.json)
+    return 0 if result.exact_match else 1
 
 
 def _logger(path: Path | None) -> "Stage5Logger":
@@ -497,6 +571,12 @@ def main(argv: list[str] | None = None) -> int:
             return compare(args.file, args.capture)
         if args.command == "validate-handoff":
             return _validate_handoff_command(args)
+        if args.command == "build-static-plan":
+            return _build_static_plan_command(args)
+        if args.command == "inspect-static-plan":
+            return _inspect_static_plan_command(args)
+        if args.command == "verify-static-plan":
+            return _verify_static_plan_command(args)
         if args.command == "scan":
             return asyncio.run(_scan_command(args))
         if args.command == "info":

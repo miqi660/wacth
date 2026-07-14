@@ -18,6 +18,10 @@ class OutputExistsError(Ultra3UploaderError):
     """输出路径已存在且未允许覆盖。"""
 
 
+class StaticTransferPlanError(Ultra3UploaderError):
+    """静态 Handoff 离线传输计划无效或无法生成。"""
+
+
 class BleTransportError(Ultra3UploaderError):
     """BLE 后端操作失败。"""
 
