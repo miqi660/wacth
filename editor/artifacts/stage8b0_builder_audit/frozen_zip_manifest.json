@@ -1,0 +1,377 @@
+{
+  "status": "COMPLETE",
+  "zip_path": "$FROZEN_ZIP",
+  "zip_size": 218518,
+  "zip_sha256": "3581B0FA3D8E0B4BB952848CC45492B157DFFF4B125D57C93611FC89BF711231",
+  "expected_zip_sha256": "3581B0FA3D8E0B4BB952848CC45492B157DFFF4B125D57C93611FC89BF711231",
+  "hash_matches": true,
+  "entry_count": 36,
+  "path_traversal_entries": [],
+  "declared_checksum_count": 35,
+  "internal_checksums_match": true,
+  "checksum_mismatches": [],
+  "undeclared_entries": [],
+  "missing_entries": [],
+  "entries": [
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/PACKAGE_CHECKSUMS.sha256",
+      "size": 5380,
+      "compressed_size": 1944,
+      "crc32": "E95B00A1",
+      "sha256": "940953D363A12623B75F22AB4D2F022C169E45BE6B53A0D1E6A5480D674F0A62",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "metadata_or_integrity"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/README_FIRST.md",
+      "size": 592,
+      "compressed_size": 494,
+      "crc32": "B232199C",
+      "sha256": "52914CDE4088EBA03A732728615FF02EA76E57A99F5BE194AE8B7641E11E9591",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/CHECKSUMS.sha256",
+      "size": 3213,
+      "compressed_size": 1711,
+      "crc32": "4F743328",
+      "sha256": "C139509EDCE14890C239F81C6179651D6051B5A55CE0628A6BBCEDBBD778F7AE",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "metadata_or_integrity"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/FROZEN.lock",
+      "size": 118,
+      "compressed_size": 107,
+      "crc32": "DB9F48DC",
+      "sha256": "980FA8F8FAF6EB9CC5DF6E1F8CF499E8EF2F5F3ABE68AC9BCF56DB5450B782CE",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "metadata_or_integrity"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/README.md",
+      "size": 1730,
+      "compressed_size": 1185,
+      "crc32": "98B9D405",
+      "sha256": "01FEBC08B8A02E7510275E7D72BBCC964122A8277B0D9384C9DBC6E5CC718063",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/builder/rebuild_official_from_pre_rgb565_v1.py",
+      "size": 2971,
+      "compressed_size": 1060,
+      "crc32": "822F31CE",
+      "sha256": "D7BA9AC845E8386C9634CB14DD54D9F3FF169E8E644D67E85DC23711B73EFCB6",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "builder_source"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+      "size": 13786,
+      "compressed_size": 3916,
+      "crc32": "345C3369",
+      "sha256": "94DCDE7A959B3A9F9F5939AC295C341A7D713DCD9EEBF2A95669F2F7C815A807",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "builder_source"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/docs/Ultra3_MActivePro_GreenLion_BLE_Protocol.md",
+      "size": 14921,
+      "compressed_size": 5744,
+      "crc32": "A034592A",
+      "sha256": "099D120D2BD06BE431B39A9262E778CAE0300E86BDB1269FA9A3E0974A535B8D",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/docs/greenlion_photo_watchface_protocol.md",
+      "size": 1570,
+      "compressed_size": 969,
+      "crc32": "36AC9815",
+      "sha256": "13E831E9B24F15D0B84457F184890283590A6F1F4D0039EF009D1158B1213D0D",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/VALIDATION.txt",
+      "size": 289,
+      "compressed_size": 172,
+      "crc32": "93455D16",
+      "sha256": "A099C977413CA09844863B03F8E48A902D4A481D884EC64F013EC7100CB0E6C1",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/device_tests/README.md",
+      "size": 687,
+      "compressed_size": 525,
+      "crc32": "ACC7ED88",
+      "sha256": "58AB9949BCA998CF200D297EDB7BC0B550A171E30EF330272BDD10BAC06ADB8D",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/official_pre_rgb565_210x252.png",
+      "size": 14597,
+      "compressed_size": 14369,
+      "crc32": "89A6B240",
+      "sha256": "7B40E5D50672A761D98EEFCC17AD9027C6383779427040E3AB26C42189C9198B",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "supporting_file"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/official_pre_rgb565_320x384.png",
+      "size": 25517,
+      "compressed_size": 25017,
+      "crc32": "6E1B0C23",
+      "sha256": "9BF425A0486F73AF0C09A572C406D56591E5C2EA51CF37D0E5E955486A7792DD",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "supporting_file"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/official_real_file_analysis.txt",
+      "size": 483,
+      "compressed_size": 288,
+      "crc32": "130DD59B",
+      "sha256": "B0EB8A3FCE2412843538D929B3A6862DEB159C5BF7242C585C2E854DA55DAD65",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "report_or_evidence"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/evidence/wire_profile_proof.json",
+      "size": 1133,
+      "compressed_size": 564,
+      "crc32": "91086C5E",
+      "sha256": "837495A2A922981384FDCEB86C172BD123042B63ED1C6CA7F8DDC74C7CD69790",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "metadata_or_integrity"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/metadata.json",
+      "size": 1521,
+      "compressed_size": 829,
+      "crc32": "8A546387",
+      "sha256": "95ECB20EB3208CB6FDFFF840F242F61607E765E3F5AF33DA6A369B111EAC3473",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "metadata_or_integrity"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/main_greenlion_wire.bin",
+      "size": 245760,
+      "compressed_size": 4052,
+      "crc32": "8A5830D7",
+      "sha256": "9C4073056B330E947E6892355E4076C3C94DD27D557D2A670C92C8359AD8476D",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/main_intended_rgb565_preview.png",
+      "size": 6064,
+      "compressed_size": 5417,
+      "crc32": "0A6D6D19",
+      "sha256": "949F18ABF99D66C7851F1A965C9983E711BBE49921458965E6DEF5A20F177B96",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/main_normal_rgb565_le.bin",
+      "size": 245760,
+      "compressed_size": 4059,
+      "crc32": "596BD22F",
+      "sha256": "7408A1199C3BF0BE8E8C191FE93B2B53532EA4E36800009880A2CB018EFF49CE",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/main_preprocessed.png",
+      "size": 6353,
+      "compressed_size": 5633,
+      "crc32": "13E08527",
+      "sha256": "DB0E23F2482E5B684607B196D59D50FA1652B0FD41BB04C7101034C602DA83BA",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/main_wire_naive_preview.png",
+      "size": 6458,
+      "compressed_size": 5697,
+      "crc32": "B998612E",
+      "sha256": "0CB06350B8CAECBDFB32102020CC2470621C755FF32D308EE91E7FBB6968ED7C",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/metadata.json",
+      "size": 1818,
+      "compressed_size": 884,
+      "crc32": "765D9838",
+      "sha256": "94F025AB6CC382CCAC580321AA64A006A84D8601BD1DADAC7987440CCBC0C3E4",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/official_calibration_351617.bin",
+      "size": 351617,
+      "compressed_size": 31467,
+      "crc32": "347B8042",
+      "sha256": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "template_and_golden"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/payload_353146.bin",
+      "size": 353146,
+      "compressed_size": 17799,
+      "crc32": "925AC3DD",
+      "sha256": "95ADFFA7602DB6B51B3CCC5F8F48AF983C2012152343A0A3B452817DBE213185",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/real_file_351617.bin",
+      "size": 351617,
+      "compressed_size": 11709,
+      "crc32": "F5956612",
+      "sha256": "FE9861701CC969BB5E08CB3C079868226DF1F7E187AB4794C5AD0BA8FE5A9FD1",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/thumb_greenlion_wire.bin",
+      "size": 105840,
+      "compressed_size": 7384,
+      "crc32": "8E7ABE23",
+      "sha256": "B021B3D262EA17AF3801C1F20F2BDDCB7C7E2235958CB81E34B028506C504294",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/thumb_intended_rgb565_preview_210x252.png",
+      "size": 9817,
+      "compressed_size": 9565,
+      "crc32": "CD3689A4",
+      "sha256": "EECBF8CA0A937DB13FDA03E399B250390352FB2CD361A874C651575835AD2154",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/thumb_normal_rgb565_le.bin",
+      "size": 105840,
+      "compressed_size": 7361,
+      "crc32": "56F4D4B2",
+      "sha256": "DA43BB79CB92066EB1A3468BC6425FACAF6630DB47F2EB14B15A6F10DCC09FD7",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/thumb_preprocessed_210x252.png",
+      "size": 12514,
+      "compressed_size": 12056,
+      "crc32": "D3344E36",
+      "sha256": "D821AD97FC3D9AA26F57423D77B57BF2B8C086768D094D8E5345376DE1454DA0",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/thumb_wire_naive_preview_210x252.png",
+      "size": 10821,
+      "compressed_size": 10561,
+      "crc32": "FA5F3012",
+      "sha256": "2248AA4056D8018A092A974DB58640539E7DFFBBF395C2E9CA9DB3E144A39FAC",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "sample_or_output"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/sample/ultra3_calibration_320x384.png",
+      "size": 6353,
+      "compressed_size": 5633,
+      "crc32": "13E08527",
+      "sha256": "DB0E23F2482E5B684607B196D59D50FA1652B0FD41BB04C7101034C602DA83BA",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "input_image"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/tools/capture_final_binder_c9.js",
+      "size": 8985,
+      "compressed_size": 2381,
+      "crc32": "DA44E3D1",
+      "sha256": "2BF92D93E596792C8C22E4C1C8F552E1E5D93A3FC94FE67B0A1B012B4CFEDAE8",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "research_tool"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/tools/capture_hi8_bitmap_pipeline_v1.js",
+      "size": 9061,
+      "compressed_size": 1739,
+      "crc32": "C153229D",
+      "sha256": "253495B2BE26227DA4656BDFE024FA5A97F05B3C463BD4C6AC272AE09F1DF005",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "research_tool"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/tools/capture_official_real_async_v2.js",
+      "size": 4741,
+      "compressed_size": 1283,
+      "crc32": "F0D95819",
+      "sha256": "CE1DE95CF87CC02702BA16D9EBE9F9C47DFFA3D44B34A7ED04407E9E87779350",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "research_tool"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/baseline/2026-07-11_v0.2.4_greenlion_exact_5photo_success/tools/compare_ultra3_real_files.py",
+      "size": 5847,
+      "compressed_size": 1896,
+      "crc32": "9FE4899A",
+      "sha256": "6AA50EAE5B5C3B0ED3FAA530A7FCD1A33D1D1A2A6095CAB9EB6A14545DE3FACE",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "research_tool"
+    },
+    {
+      "path": "Ultra3_v0.2.4_Frozen_Baseline_Package/freeze_to_project.ps1",
+      "size": 4551,
+      "compressed_size": 1436,
+      "crc32": "3C8771EC",
+      "sha256": "4327C3D6C69BFA614A9663FF7C01B7044EC2B69F028DE35DC4069A446924C5CA",
+      "is_directory": false,
+      "path_safe": true,
+      "role_assessment": "supporting_file"
+    }
+  ]
+}

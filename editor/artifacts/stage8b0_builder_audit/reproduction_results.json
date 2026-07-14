@@ -1,0 +1,577 @@
+{
+  "status": "COMPLETE",
+  "temporary_directory": "$TEMP_AUDIT",
+  "temporary_directory_outside_repository": true,
+  "builder_path": "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+  "builder_sha256": "94DCDE7A959B3A9F9F5939AC295C341A7D713DCD9EEBF2A95669F2F7C815A807",
+  "python_version": "3.10.8 (tags/v3.10.8:aaaf517, Oct 11 2022, 16:50:30) [MSC v.1933 64 bit (AMD64)]",
+  "pillow_version": "10.4.0",
+  "template_path": "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+  "template_size": 351617,
+  "template_sha256": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC",
+  "template_header_hex": "02 00 00 FF FF FF 00 00 80 01 40 01 FC 00 D2 00 00",
+  "template_offset_0": 2,
+  "pixel_vectors": {
+    "function_source": "frozen Builder functions called directly",
+    "quantize": "truncate",
+    "vectors": [
+      {
+        "name": "black",
+        "rgb": [
+          0,
+          0,
+          0
+        ],
+        "normal_rgb565_le": "0000",
+        "greenlion_wire": "00FF"
+      },
+      {
+        "name": "white",
+        "rgb": [
+          255,
+          255,
+          255
+        ],
+        "normal_rgb565_le": "FFFF",
+        "greenlion_wire": "FFF8"
+      },
+      {
+        "name": "red",
+        "rgb": [
+          255,
+          0,
+          0
+        ],
+        "normal_rgb565_le": "00F8",
+        "greenlion_wire": "0007"
+      },
+      {
+        "name": "green",
+        "rgb": [
+          0,
+          255,
+          0
+        ],
+        "normal_rgb565_le": "E007",
+        "greenlion_wire": "E000"
+      },
+      {
+        "name": "blue",
+        "rgb": [
+          0,
+          0,
+          255
+        ],
+        "normal_rgb565_le": "1F00",
+        "greenlion_wire": "1F84"
+      },
+      {
+        "name": "middle_gray",
+        "rgb": [
+          128,
+          128,
+          128
+        ],
+        "normal_rgb565_le": "1084",
+        "greenlion_wire": "1015"
+      },
+      {
+        "name": "asymmetric",
+        "rgb": [
+          18,
+          165,
+          124
+        ],
+        "normal_rgb565_le": "2F15",
+        "greenlion_wire": "2F00"
+      }
+    ],
+    "normal_buffer_hex": "0000FFFF00F8E0071F0010842F15",
+    "wire_buffer_hex": "00FFFFF80007E0001F8410152F00",
+    "last_high_byte": 0
+  },
+  "wire_artifact_verification": {
+    "main_exact": true,
+    "thumbnail_exact": true,
+    "main_last_high": 0,
+    "thumbnail_last_high": 0,
+    "main_length": 245760,
+    "thumbnail_length": 105840,
+    "linear_across_main_row_boundary": true,
+    "resources_encoded_separately": true
+  },
+  "samples": [
+    {
+      "sample": "photo01",
+      "input": {
+        "path": "$FROZEN_BASELINE/evidence/local_additions/test_photos/1.JPG",
+        "size": 2098803,
+        "sha256": "9FDBB04E9DD910296B44BECB98C25A0C988A4B1B98EC0DAE12A0E831BC747CB4",
+        "format": "JPEG",
+        "mode": "RGB",
+        "dimensions": [
+          4320,
+          3240
+        ],
+        "exif_orientation": 1,
+        "icc_profile_present": false,
+        "transparency_present": false
+      },
+      "settings": {
+        "mode": "full",
+        "fit": "cover",
+        "resample": "bilinear",
+        "quantize": "truncate",
+        "wire_profile": "greenlion-next-high",
+        "preblur": 0.0
+      },
+      "historical_real_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+      "historical_payload_sha256": "19C1B72DA080C5F23D0978FF7C93DBD10F8E07D6EAAEFF4E3C4D08608E31BCF5",
+      "run1": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/1.JPG",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo01_run1"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=44b4893acf6244119de655b32c1ce760048f3128a24489b49ff24f7bb60fa664\npayload: 353146 sha256=19c1b72da080c5f23d0978ff7c93dbd10f8e07d6eaaeff4e3c4d08608e31bcf5\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo01_run1\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo01_run1/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+        "payload_path": "$TEMP_AUDIT/photo01_run1/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "19C1B72DA080C5F23D0978FF7C93DBD10F8E07D6EAAEFF4E3C4D08608E31BCF5"
+      },
+      "run2": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/1.JPG",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo01_run2"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=44b4893acf6244119de655b32c1ce760048f3128a24489b49ff24f7bb60fa664\npayload: 353146 sha256=19c1b72da080c5f23d0978ff7c93dbd10f8e07d6eaaeff4e3c4d08608e31bcf5\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo01_run2\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo01_run2/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+        "payload_path": "$TEMP_AUDIT/photo01_run2/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "19C1B72DA080C5F23D0978FF7C93DBD10F8E07D6EAAEFF4E3C4D08608E31BCF5"
+      },
+      "run1_run2_exact_match": true,
+      "historical_exact_match": true,
+      "changed_bytes": 0,
+      "changed_ranges": [],
+      "input_unchanged": true,
+      "historical_outputs_unchanged": true,
+      "device_evidence_level": "C",
+      "device_evidence_note": "输入、Builder 输出和文字/上传日志存在；真机截图与逐样本抓包未归档"
+    },
+    {
+      "sample": "photo02",
+      "input": {
+        "path": "$FROZEN_BASELINE/evidence/local_additions/test_photos/2.png",
+        "size": 675638,
+        "sha256": "993BE3445975504C1BD2E587E38D5E22F421305161FEEBCCB8C1AE0BEA638ACD",
+        "format": "PNG",
+        "mode": "RGBA",
+        "dimensions": [
+          1081,
+          608
+        ],
+        "exif_orientation": null,
+        "icc_profile_present": false,
+        "transparency_present": true
+      },
+      "settings": {
+        "mode": "full",
+        "fit": "cover",
+        "resample": "bilinear",
+        "quantize": "truncate",
+        "wire_profile": "greenlion-next-high",
+        "preblur": 0.0
+      },
+      "historical_real_sha256": "CBD34D9BE77B138481AB7AD590326CC7437EE55C45DBECB532A0DF1C4F8A2763",
+      "historical_payload_sha256": "F55AEDE766E7B736535832A88EFEFFD407A1BB6A2735547AF0B42EEBC14BC267",
+      "run1": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/2.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo02_run1"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=cbd34d9be77b138481ab7ad590326cc7437ee55c45dbecb532a0df1c4f8a2763\npayload: 353146 sha256=f55aede766e7b736535832a88efeffd407a1bb6a2735547af0b42eebc14bc267\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo02_run1\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo02_run1/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "CBD34D9BE77B138481AB7AD590326CC7437EE55C45DBECB532A0DF1C4F8A2763",
+        "payload_path": "$TEMP_AUDIT/photo02_run1/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "F55AEDE766E7B736535832A88EFEFFD407A1BB6A2735547AF0B42EEBC14BC267"
+      },
+      "run2": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/2.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo02_run2"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=cbd34d9be77b138481ab7ad590326cc7437ee55c45dbecb532a0df1c4f8a2763\npayload: 353146 sha256=f55aede766e7b736535832a88efeffd407a1bb6a2735547af0b42eebc14bc267\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo02_run2\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo02_run2/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "CBD34D9BE77B138481AB7AD590326CC7437EE55C45DBECB532A0DF1C4F8A2763",
+        "payload_path": "$TEMP_AUDIT/photo02_run2/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "F55AEDE766E7B736535832A88EFEFFD407A1BB6A2735547AF0B42EEBC14BC267"
+      },
+      "run1_run2_exact_match": true,
+      "historical_exact_match": true,
+      "changed_bytes": 0,
+      "changed_ranges": [],
+      "input_unchanged": true,
+      "historical_outputs_unchanged": true,
+      "device_evidence_level": "C",
+      "device_evidence_note": "输入、Builder 输出和文字/上传日志存在；真机截图与逐样本抓包未归档"
+    },
+    {
+      "sample": "photo03",
+      "input": {
+        "path": "$FROZEN_BASELINE/evidence/local_additions/test_photos/3.png",
+        "size": 1729976,
+        "sha256": "158C38A2E0713B7B1AE5F24A346C24A72102A1F2E3FD49ACA71DB5CAD8D2A6E5",
+        "format": "PNG",
+        "mode": "RGB",
+        "dimensions": [
+          2560,
+          1600
+        ],
+        "exif_orientation": null,
+        "icc_profile_present": false,
+        "transparency_present": false
+      },
+      "settings": {
+        "mode": "full",
+        "fit": "cover",
+        "resample": "bilinear",
+        "quantize": "truncate",
+        "wire_profile": "greenlion-next-high",
+        "preblur": 0.0
+      },
+      "historical_real_sha256": "19CAF5303D780FD6C4F46DED3219AD41E839FD495A1A96C51FD40EAE296C23B6",
+      "historical_payload_sha256": "67C7E6C3D109E165D10DE03DEF1DCAC50B3F09C025186B78C444B592B87D5AB4",
+      "run1": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/3.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo03_run1"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=19caf5303d780fd6c4f46ded3219ad41e839fd495a1a96c51fd40eae296c23b6\npayload: 353146 sha256=67c7e6c3d109e165d10de03def1dcac50b3f09c025186b78c444b592b87d5ab4\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo03_run1\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo03_run1/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "19CAF5303D780FD6C4F46DED3219AD41E839FD495A1A96C51FD40EAE296C23B6",
+        "payload_path": "$TEMP_AUDIT/photo03_run1/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "67C7E6C3D109E165D10DE03DEF1DCAC50B3F09C025186B78C444B592B87D5AB4"
+      },
+      "run2": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/3.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo03_run2"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=19caf5303d780fd6c4f46ded3219ad41e839fd495a1a96c51fd40eae296c23b6\npayload: 353146 sha256=67c7e6c3d109e165d10de03def1dcac50b3f09c025186b78c444b592b87d5ab4\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo03_run2\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo03_run2/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "19CAF5303D780FD6C4F46DED3219AD41E839FD495A1A96C51FD40EAE296C23B6",
+        "payload_path": "$TEMP_AUDIT/photo03_run2/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "67C7E6C3D109E165D10DE03DEF1DCAC50B3F09C025186B78C444B592B87D5AB4"
+      },
+      "run1_run2_exact_match": true,
+      "historical_exact_match": true,
+      "changed_bytes": 0,
+      "changed_ranges": [],
+      "input_unchanged": true,
+      "historical_outputs_unchanged": true,
+      "device_evidence_level": "C",
+      "device_evidence_note": "输入、Builder 输出和文字/上传日志存在；真机截图与逐样本抓包未归档"
+    },
+    {
+      "sample": "photo04",
+      "input": {
+        "path": "$FROZEN_BASELINE/evidence/local_additions/test_photos/4.png",
+        "size": 3033191,
+        "sha256": "8AA6F1830BE27CDC86DCE7A44997B6FD32EBF4A419E5F74A6420C579870C8BE7",
+        "format": "PNG",
+        "mode": "RGB",
+        "dimensions": [
+          2560,
+          1600
+        ],
+        "exif_orientation": null,
+        "icc_profile_present": false,
+        "transparency_present": false
+      },
+      "settings": {
+        "mode": "full",
+        "fit": "cover",
+        "resample": "bilinear",
+        "quantize": "truncate",
+        "wire_profile": "greenlion-next-high",
+        "preblur": 0.0
+      },
+      "historical_real_sha256": "7F1F531F94E6C312FFEF167B03B2988AAC44A42790ABA19A6EED9F03795344C9",
+      "historical_payload_sha256": "C6063292E2C7C2DB1BCABA32D045718562E12DA5F003E20C311F8A1B69A6C98C",
+      "run1": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/4.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo04_run1"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=7f1f531f94e6c312ffef167b03b2988aac44a42790aba19a6eed9f03795344c9\npayload: 353146 sha256=c6063292e2c7c2db1bcaba32d045718562e12da5f003e20c311f8a1b69a6c98c\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo04_run1\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo04_run1/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "7F1F531F94E6C312FFEF167B03B2988AAC44A42790ABA19A6EED9F03795344C9",
+        "payload_path": "$TEMP_AUDIT/photo04_run1/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "C6063292E2C7C2DB1BCABA32D045718562E12DA5F003E20C311F8A1B69A6C98C"
+      },
+      "run2": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/4.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo04_run2"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=7f1f531f94e6c312ffef167b03b2988aac44a42790aba19a6eed9f03795344c9\npayload: 353146 sha256=c6063292e2c7c2db1bcaba32d045718562e12da5f003e20c311f8a1b69a6c98c\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo04_run2\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo04_run2/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "7F1F531F94E6C312FFEF167B03B2988AAC44A42790ABA19A6EED9F03795344C9",
+        "payload_path": "$TEMP_AUDIT/photo04_run2/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "C6063292E2C7C2DB1BCABA32D045718562E12DA5F003E20C311F8A1B69A6C98C"
+      },
+      "run1_run2_exact_match": true,
+      "historical_exact_match": true,
+      "changed_bytes": 0,
+      "changed_ranges": [],
+      "input_unchanged": true,
+      "historical_outputs_unchanged": true,
+      "device_evidence_level": "C",
+      "device_evidence_note": "输入、Builder 输出和文字/上传日志存在；真机截图与逐样本抓包未归档"
+    },
+    {
+      "sample": "photo05",
+      "input": {
+        "path": "$FROZEN_BASELINE/evidence/local_additions/test_photos/5.png",
+        "size": 3340160,
+        "sha256": "0748AADB7C9B20D99C78C4165E77B0129B8554AB331F670886E3D0BD3F3E6828",
+        "format": "PNG",
+        "mode": "RGB",
+        "dimensions": [
+          2560,
+          1600
+        ],
+        "exif_orientation": null,
+        "icc_profile_present": false,
+        "transparency_present": false
+      },
+      "settings": {
+        "mode": "full",
+        "fit": "cover",
+        "resample": "bilinear",
+        "quantize": "truncate",
+        "wire_profile": "greenlion-next-high",
+        "preblur": 0.0
+      },
+      "historical_real_sha256": "62E2B481F62C270937E090AD69CC87A34A11B7DDBEFFCA1B70D31AE638CB4078",
+      "historical_payload_sha256": "0320B60EDFBC1F1DE0A0177269493DD12C4E7CC67E6B0EF251B94750658D58C4",
+      "run1": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/5.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo05_run1"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=62e2b481f62c270937e090ad69cc87a34a11b7ddbeffca1b70d31ae638cb4078\npayload: 353146 sha256=0320b60edfbc1f1de0a0177269493dd12c4e7cc67e6b0ef251b94750658d58c4\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo05_run1\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo05_run1/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "62E2B481F62C270937E090AD69CC87A34A11B7DDBEFFCA1B70D31AE638CB4078",
+        "payload_path": "$TEMP_AUDIT/photo05_run1/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "0320B60EDFBC1F1DE0A0177269493DD12C4E7CC67E6B0EF251B94750658D58C4"
+      },
+      "run2": {
+        "command": [
+          "<PYTHON>",
+          "$FROZEN_BASELINE/builder/ultra3_builder_v0.2.4-greenlion-exact.py",
+          "--image",
+          "$FROZEN_BASELINE/evidence/local_additions/test_photos/5.png",
+          "--template",
+          "$FROZEN_BASELINE/sample/official_calibration_351617.bin",
+          "--out",
+          "$TEMP_AUDIT/photo05_run2"
+        ],
+        "returncode": 0,
+        "stdout": "Ultra3 Builder v0.2.4-greenlion-exact\nmode: full\nfit: cover\nresample: bilinear\nquantize: truncate\nwire_profile: greenlion-next-high\npreblur: 0\nreal: 351617 sha256=62e2b481f62c270937e090ad69cc87a34a11b7ddbeffca1b70d31ae638cb4078\npayload: 353146 sha256=0320b60edfbc1f1de0a0177269493dd12c4e7cc67e6b0ef251b94750658d58c4\nchunks: 1529\nchecksum_ok: True\nrepack_identical: True\nsaved: $TEMP_AUDIT\\photo05_run2\n",
+        "stderr": "",
+        "real_path": "$TEMP_AUDIT/photo05_run2/real_file_351617.bin",
+        "real_size": 351617,
+        "real_sha256": "62E2B481F62C270937E090AD69CC87A34A11B7DDBEFFCA1B70D31AE638CB4078",
+        "payload_path": "$TEMP_AUDIT/photo05_run2/payload_353146.bin",
+        "payload_size": 353146,
+        "payload_sha256": "0320B60EDFBC1F1DE0A0177269493DD12C4E7CC67E6B0EF251B94750658D58C4"
+      },
+      "run1_run2_exact_match": true,
+      "historical_exact_match": true,
+      "changed_bytes": 0,
+      "changed_ranges": [],
+      "input_unchanged": true,
+      "historical_outputs_unchanged": true,
+      "device_evidence_level": "C",
+      "device_evidence_note": "输入、Builder 输出和文字/上传日志存在；真机截图与逐样本抓包未归档"
+    }
+  ],
+  "sample_count": 5,
+  "repeat_deterministic_count": 5,
+  "historical_exact_match_count": 5,
+  "template_unchanged": true,
+  "frozen_zip_sha256_before": "3581B0FA3D8E0B4BB952848CC45492B157DFFF4B125D57C93611FC89BF711231",
+  "frozen_zip_sha256_after": "3581B0FA3D8E0B4BB952848CC45492B157DFFF4B125D57C93611FC89BF711231",
+  "frozen_zip_unchanged": true,
+  "external_baseline_integrity": {
+    "checksum_file_relative_path": "CHECKSUMS.sha256",
+    "checksum_file_sha256": "EBEC5E71B6D32725D93264335FD89E7AD6E8225C95AA7EA9BF17D9F6F28FAA6A",
+    "checksum_file_self_declared": false,
+    "checksum_file_self_excluded_by_design": true,
+    "declared_count": 105,
+    "verified_count": 105,
+    "mismatch_count": 0,
+    "missing_count": 0,
+    "non_regular_count": 0,
+    "undeclared_count": 0,
+    "mismatches": [],
+    "missing_files": [],
+    "non_regular_files": [],
+    "undeclared_files": [],
+    "canonical_manifest_format": "<relative_path>\\t<size>\\t<SHA256>\\n",
+    "canonical_manifest_entry_count": 105,
+    "canonical_manifest_sha256": "AC33C4A8D248F206E60E1125CDDE76B1AE2410946ACDCD0E5A29F060A7D6065C",
+    "builder_covered": true,
+    "template_covered": true,
+    "five_inputs_covered": true,
+    "five_historical_real_bins_covered": true,
+    "five_historical_payloads_covered": true,
+    "frozen_lock_covered": true,
+    "local_freeze_covered": true,
+    "local_freeze": {
+      "parseable": true,
+      "fields": [
+        "archive_mode",
+        "baseline_name",
+        "destination",
+        "file_count",
+        "frozen_at",
+        "original_files_moved",
+        "source_package",
+        "status"
+      ],
+      "expected_fields_present": true,
+      "freeze_information_present": true,
+      "archive_mode": "copy_only",
+      "original_files_moved": false,
+      "recorded_file_count": 105,
+      "recorded_file_count_matches_declared": true,
+      "path_fields_present_but_values_redacted": [
+        "source_package",
+        "destination"
+      ],
+      "hash_fields": [],
+      "recorded_hash_verification": "UNKNOWN_NO_HASH_FIELDS",
+      "exists": true,
+      "size": 533,
+      "sha256": "A1A602CE237BC205F026FCF7782F2D245715E54D884CF039AAB36A522A1E8985",
+      "covered": true
+    },
+    "frozen_lock": {
+      "exists": true,
+      "size": 118,
+      "sha256": "980FA8F8FAF6EB9CC5DF6E1F8CF499E8EF2F5F3ABE68AC9BCF56DB5450B782CE",
+      "content_summary": [
+        "FROZEN_STABLE_DEVICE_VERIFIED",
+        "Do not edit this baseline in place.",
+        "Create a new dated baseline for all future changes."
+      ],
+      "covered": true,
+      "trust_basis": "CHECKSUM_COVERED"
+    },
+    "integrity_status": "VERIFIED",
+    "historical_oracle_integrity": "VERIFIED"
+  },
+  "external_usage": {
+    "bleak_initialization": 0,
+    "ble_scan": 0,
+    "ble_connect": 0,
+    "ff02_writes": 0,
+    "adb": 0,
+    "frida": 0,
+    "uploader_calls": 0,
+    "network_requests": 0,
+    "real_uploads": 0
+  }
+}
