@@ -1,0 +1,287 @@
+{
+  "status": "PASS",
+  "sample_count": 2,
+  "terminology": {
+    "input_image": "原始 JPG/PNG",
+    "static_container": "351617 字节 BIN / C9 DATA concat",
+    "region_stream": "353146 字节 DATA+checksum 区域流",
+    "c9_frame_stream": "362320 字节完整 C9 帧流"
+  },
+  "samples": [
+    {
+      "sample": "A",
+      "status": "PASS",
+      "capture_layer": "android.bluetooth.IBluetoothGatt$Stub$Proxy.writeCharacteristic",
+      "binder_overload": "(int, java.lang.String, int, int, int, [B)",
+      "input_image": {
+        "logical_name": "night_cruise_red_darentang_sign",
+        "size": 2098803,
+        "sha256": "9FDBB04E9DD910296B44BECB98C25A0C988A4B1B98EC0DAE12A0E831BC747CB4"
+      },
+      "static_container": {
+        "size": 351617,
+        "sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664"
+      },
+      "region_stream": {
+        "size": 353146,
+        "sha256": "19C1B72DA080C5F23D0978FF7C93DBD10F8E07D6EAAEFF4E3C4D08608E31BCF5"
+      },
+      "c9_frame_stream": {
+        "size": 362320,
+        "sha256": null
+      },
+      "total_target_writes": 1531,
+      "c8_count": 1,
+      "c9_count": 1529,
+      "ca_count": 1,
+      "first_c9_ordinal": 2,
+      "last_c9_ordinal": 1530,
+      "sequence_range": "0..1528",
+      "missing": [],
+      "duplicates": [],
+      "out_of_order": false,
+      "checksum_failures": [],
+      "malformed_c9": [],
+      "observed_handle_histogram": {
+        "98": 1531
+      },
+      "before_first_c9_frames": [
+        {
+          "ordinal": 1,
+          "command": "C8",
+          "length": 12,
+          "hex": "BCC8020701815D0500F905E2"
+        }
+      ],
+      "after_last_c9_frames": [
+        {
+          "ordinal": 1531,
+          "command": "CA",
+          "length": 6,
+          "hex": "BCCA02010505"
+        }
+      ],
+      "c8_hex": [
+        "BCC8020701815D0500F905E2"
+      ],
+      "ca_hex": [
+        "BCCA02010505"
+      ],
+      "c8_lengths": [
+        12
+      ],
+      "ca_lengths": [
+        6
+      ],
+      "greenlion_reported_success": true,
+      "watch_display_confirmed": true,
+      "capture_summary": {
+        "kind": "summary",
+        "reason": "CA",
+        "total_binder_invocations": 1531,
+        "byte_array_candidates": 1531,
+        "protocol_frames": 1531,
+        "c8_count": 1,
+        "c9_count": 1529,
+        "ca_count": 1,
+        "unique_sequences": 1529,
+        "sequence_range": "0..1528",
+        "expected_sequence_range": "0..1528",
+        "first_c9_ordinal": 2,
+        "last_c9_ordinal": 1530,
+        "missing_count": 0,
+        "missing_sequences": [],
+        "duplicate_count": 0,
+        "duplicates": [],
+        "malformed_c9": 0,
+        "out_of_range_sequences": [],
+        "handle_histogram": {
+          "98": 1531
+        },
+        "address_policy": "redacted",
+        "capture_filter": "protocol bytes first; no handle prefilter"
+      },
+      "errors": [],
+      "observations": [
+        {
+          "command": "C8",
+          "frame_index": 0,
+          "observation": "c9_count_le16",
+          "offsets": [
+            9
+          ],
+          "claim_level": "byte_match_only"
+        },
+        {
+          "command": "C8",
+          "frame_index": 0,
+          "observation": "static_container_size_le32",
+          "offsets": [
+            5
+          ],
+          "claim_level": "byte_match_only"
+        }
+      ]
+    },
+    {
+      "sample": "B",
+      "status": "PASS",
+      "capture_layer": "android.bluetooth.IBluetoothGatt$Stub$Proxy.writeCharacteristic",
+      "binder_overload": "(int, java.lang.String, int, int, int, [B)",
+      "input_image": {
+        "logical_name": "white_shirt_brown_hair_girl_white_bed",
+        "size": 675638,
+        "sha256": "993BE3445975504C1BD2E587E38D5E22F421305161FEEBCCB8C1AE0BEA638ACD"
+      },
+      "static_container": {
+        "size": 351617,
+        "sha256": "CBD34D9BE77B138481AB7AD590326CC7437EE55C45DBECB532A0DF1C4F8A2763"
+      },
+      "region_stream": {
+        "size": 353146,
+        "sha256": "F55AEDE766E7B736535832A88EFEFFD407A1BB6A2735547AF0B42EEBC14BC267"
+      },
+      "c9_frame_stream": {
+        "size": 362320,
+        "sha256": null
+      },
+      "total_target_writes": 1531,
+      "c8_count": 1,
+      "c9_count": 1529,
+      "ca_count": 1,
+      "first_c9_ordinal": 2,
+      "last_c9_ordinal": 1530,
+      "sequence_range": "0..1528",
+      "missing": [],
+      "duplicates": [],
+      "out_of_order": false,
+      "checksum_failures": [],
+      "malformed_c9": [],
+      "observed_handle_histogram": {
+        "98": 1531
+      },
+      "before_first_c9_frames": [
+        {
+          "ordinal": 1,
+          "command": "C8",
+          "length": 12,
+          "hex": "BCC8020701815D0500F905E2"
+        }
+      ],
+      "after_last_c9_frames": [
+        {
+          "ordinal": 1531,
+          "command": "CA",
+          "length": 6,
+          "hex": "BCCA02010505"
+        }
+      ],
+      "c8_hex": [
+        "BCC8020701815D0500F905E2"
+      ],
+      "ca_hex": [
+        "BCCA02010505"
+      ],
+      "c8_lengths": [
+        12
+      ],
+      "ca_lengths": [
+        6
+      ],
+      "greenlion_reported_success": true,
+      "watch_display_confirmed": true,
+      "capture_summary": {
+        "kind": "summary",
+        "reason": "CA",
+        "total_binder_invocations": 1531,
+        "byte_array_candidates": 1531,
+        "protocol_frames": 1531,
+        "c8_count": 1,
+        "c9_count": 1529,
+        "ca_count": 1,
+        "unique_sequences": 1529,
+        "sequence_range": "0..1528",
+        "expected_sequence_range": "0..1528",
+        "first_c9_ordinal": 2,
+        "last_c9_ordinal": 1530,
+        "missing_count": 0,
+        "missing_sequences": [],
+        "duplicate_count": 0,
+        "duplicates": [],
+        "malformed_c9": 0,
+        "out_of_range_sequences": [],
+        "handle_histogram": {
+          "98": 1531
+        },
+        "address_policy": "redacted",
+        "capture_filter": "protocol bytes first; no handle prefilter"
+      },
+      "errors": [],
+      "observations": [
+        {
+          "command": "C8",
+          "frame_index": 0,
+          "observation": "c9_count_le16",
+          "offsets": [
+            9
+          ],
+          "claim_level": "byte_match_only"
+        },
+        {
+          "command": "C8",
+          "frame_index": 0,
+          "observation": "static_container_size_le32",
+          "offsets": [
+            5
+          ],
+          "claim_level": "byte_match_only"
+        }
+      ]
+    }
+  ],
+  "comparisons": {
+    "A_vs_B": {
+      "c8": {
+        "a_count": 1,
+        "b_count": 1,
+        "pairs": [
+          {
+            "index": 0,
+            "status": "identical",
+            "a_length": 12,
+            "b_length": 12,
+            "common_ranges": [
+              [
+                0,
+                11
+              ]
+            ],
+            "difference_offsets": [],
+            "differences": []
+          }
+        ]
+      },
+      "ca": {
+        "a_count": 1,
+        "b_count": 1,
+        "pairs": [
+          {
+            "index": 0,
+            "status": "identical",
+            "a_length": 6,
+            "b_length": 6,
+            "common_ranges": [
+              [
+                0,
+                5
+              ]
+            ],
+            "difference_offsets": [],
+            "differences": []
+          }
+        ]
+      }
+    }
+  },
+  "interpretation_boundary": "仅报告原始差异和字节匹配；两个样本不足以永久命名字段。"
+}
