@@ -7,6 +7,7 @@ from pathlib import Path
 
 from .differ import diff_bcsdial
 from .errors import EditorError
+from .greenlion_builder import GreenLionStaticBuildInput, build_greenlion_static_diy
 from .hexdump import format_hexdump, hex_bytes
 from .inspector import inspect_bcsdial
 from .known_patch import verify_known_patch
@@ -93,6 +94,13 @@ def make_parser() -> argparse.ArgumentParser:
     edit_parser.add_argument("--output", type=Path, required=True)
     edit_parser.add_argument("--json", type=Path)
     edit_parser.add_argument("--report", type=Path)
+
+    build_parser = commands.add_parser("build-static-diy")
+    build_parser.add_argument("--image", type=Path, required=True)
+    build_parser.add_argument("--template", type=Path, required=True)
+    build_parser.add_argument("--output", type=Path, required=True)
+    build_parser.add_argument("--json", type=Path)
+    build_parser.add_argument("--report", type=Path)
 
     commands.add_parser("gui")
     return parser
@@ -268,6 +276,30 @@ def _set_time_position_command(args: argparse.Namespace) -> int:
     return 0
 
 
+def _build_static_diy_command(args: argparse.Namespace) -> int:
+    result = build_greenlion_static_diy(
+        GreenLionStaticBuildInput(args.image, args.template, args.output),
+        json_path=args.json,
+        report_path=args.report,
+    )
+    exact = "true" if result.exact_golden_match is True else "not-applicable"
+    print(f"[OK] builder: {result.builder_version}")
+    print(f"[OK] container: {result.container}")
+    print(f"[OK] image format: {result.image_format}")
+    print(f"[OK] image SHA-256: {result.image_sha256_before}")
+    print(f"[OK] template SHA-256: {result.template_sha256_before}")
+    print(f"[OK] output size: {result.output_size}")
+    print(f"[OK] output SHA-256: {result.output_sha256}")
+    print(f"[OK] template header preserved: {str(result.template_header_preserved).lower()}")
+    print(f"[OK] template offset 0: {result.template_offset_zero:02X}")
+    print(f"[OK] output revalidated: {str(result.output_revalidated).lower()}")
+    print(f"[OK] determinism status: {result.determinism_status.value}")
+    print(f"[OK] golden status: {result.golden_status.value}")
+    print(f"[OK] exact golden match: {exact}")
+    print("[OK] external usage: 0")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     try:
         args = make_parser().parse_args(argv)
@@ -281,6 +313,8 @@ def main(argv: list[str] | None = None) -> int:
             return _gui_command()
         if args.command == "set-time-position":
             return _set_time_position_command(args)
+        if args.command == "build-static-diy":
+            return _build_static_diy_command(args)
         return _reconstruct_command(args)
     except EditorError as exc:
         print(f"错误: {exc}", file=sys.stderr)

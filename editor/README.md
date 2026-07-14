@@ -32,6 +32,13 @@ python -m ultra3_editor set-time-position `
   --output .\edited.bin `
   --json .\edited.json `
   --report .\edited.md
+
+python -m ultra3_editor build-static-diy `
+  --image .\photo.png `
+  --template .\official_calibration_351617.bin `
+  --output .\watchface.bin `
+  --json .\build.json `
+  --report .\build.md
 ```
 
 报告使用独占创建，已存在时拒绝覆盖，不提供 `--force`。输入 BIN 始终只读。
@@ -52,6 +59,16 @@ BIN、JSON 和 Markdown 均使用独占创建，任何目标已存在时拒绝�
 都会删除本次调用已创建的文件，不删除输入或调用前已有文件。该核心是纯离线 API，不导入
 uploader，不调用 BLE、adb、Frida 或 Builder。
 
+## Stage 8B-1：GreenLion Static Builder 公共核心
+
+`build-static-diy` 只开放冻结验证的 exact 路径：PNG/JPEG 输入、Pillow `10.4.0`、`cover`、
+bilinear、truncate RGB565、`greenlion-next-high`，并从同一图片分别生成 `320 × 384` 主资源
+和 `210 × 252` 缩略资源。调用者必须提供逐字节匹配的 351617 字节已验证模板；模板前 17
+字节原样保留，offset 0 保持 `02`。
+
+BIN、JSON 和 Markdown 均独占创建，任一失败会清理本次调用创建的文件。第一版不提供覆盖、
+时间位置、独立缩略图、其他 fit 或编码配置，也不接入 GUI 和外部设备。
+
 ## Ultra3 Lab 离线 GUI
 
 Stage 8A.2 提供 PyQt6 深色离线时间位置编辑 GUI：
@@ -67,6 +84,5 @@ GUI 通过 `OfflineGuiController` 调用 Stage 7B-1 `set_time_position()`，支�
 
 静态 DIY 资源预览使用两个独立的已验证画布：主图 `320 × 384`、缩略图 `210 × 252`，
 比例均为 `5:6`。它们是资源尺寸，不是物理屏幕分辨率；物理显示几何与可见区域均为
-`UNKNOWN`。当前仓库没有 `Builder v0.2.4-greenlion-exact` 公共接口，因此图片导入、适配、
-RGB565 编码、缩略图生成和完整表盘构建继续硬禁用；时间位置 BIN 编辑与资源制作在界面中
-明确区分。
+`UNKNOWN`。Builder 公共核心尚未接入 GUI，因此图片导入、适配、RGB565 编码、缩略图生成
+和完整表盘构建继续硬禁用；时间位置 BIN 编辑与资源制作在界面中明确区分。
