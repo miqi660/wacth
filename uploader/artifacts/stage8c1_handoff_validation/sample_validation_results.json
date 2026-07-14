@@ -1,0 +1,147 @@
+{
+  "status": "COMPLETE",
+  "schema": "ultra3-handoff/v1",
+  "sample_count": 2,
+  "validation_count": 4,
+  "validations": [
+    {
+      "sample": "golden_match.handoff.json",
+      "manifest": "editor/artifacts/stage8c0_handoff_design/golden_match.handoff.json",
+      "target_firmware": null,
+      "status": "valid",
+      "firmware_compatible": null,
+      "safe_to_prepare_transfer": false,
+      "actual_artifact_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+      "actual_artifact_size": 351617,
+      "header_valid": true,
+      "offset_zero_valid": true,
+      "layout_valid": true,
+      "artifact_unchanged": true,
+      "transfer_unprepared": true,
+      "golden_status": "match",
+      "device_evidence_level": "C",
+      "warnings": [
+        "device_evidence_level_c",
+        "target_firmware_not_provided"
+      ],
+      "errors": [],
+      "external_usage": {
+        "bleak_initializations": 0,
+        "ble_scans": 0,
+        "ble_connections": 0,
+        "ff02_writes": 0,
+        "ff03_notifications": 0,
+        "adb": 0,
+        "frida": 0,
+        "network_requests": 0,
+        "payloads_generated": 0,
+        "c9_frames_generated": 0,
+        "real_uploads": 0
+      }
+    },
+    {
+      "sample": "golden_match.handoff.json",
+      "manifest": "editor/artifacts/stage8c0_handoff_design/golden_match.handoff.json",
+      "target_firmware": "NJ-LEJ-2.1.7",
+      "status": "valid",
+      "firmware_compatible": true,
+      "safe_to_prepare_transfer": true,
+      "actual_artifact_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+      "actual_artifact_size": 351617,
+      "header_valid": true,
+      "offset_zero_valid": true,
+      "layout_valid": true,
+      "artifact_unchanged": true,
+      "transfer_unprepared": true,
+      "golden_status": "match",
+      "device_evidence_level": "C",
+      "warnings": [
+        "device_evidence_level_c"
+      ],
+      "errors": [],
+      "external_usage": {
+        "bleak_initializations": 0,
+        "ble_scans": 0,
+        "ble_connections": 0,
+        "ff02_writes": 0,
+        "ff03_notifications": 0,
+        "adb": 0,
+        "frida": 0,
+        "network_requests": 0,
+        "payloads_generated": 0,
+        "c9_frames_generated": 0,
+        "real_uploads": 0
+      }
+    },
+    {
+      "sample": "custom_not_applicable.handoff.json",
+      "manifest": "editor/artifacts/stage8c0_handoff_design/custom_not_applicable.handoff.json",
+      "target_firmware": null,
+      "status": "valid",
+      "firmware_compatible": null,
+      "safe_to_prepare_transfer": false,
+      "actual_artifact_sha256": "1D87836F3D985409F7787254B5ABFECAA81543D99082FAAC2FAC962B6ADBFC6C",
+      "actual_artifact_size": 351617,
+      "header_valid": true,
+      "offset_zero_valid": true,
+      "layout_valid": true,
+      "artifact_unchanged": true,
+      "transfer_unprepared": true,
+      "golden_status": "not_applicable",
+      "device_evidence_level": "C",
+      "warnings": [
+        "device_evidence_level_c",
+        "target_firmware_not_provided"
+      ],
+      "errors": [],
+      "external_usage": {
+        "bleak_initializations": 0,
+        "ble_scans": 0,
+        "ble_connections": 0,
+        "ff02_writes": 0,
+        "ff03_notifications": 0,
+        "adb": 0,
+        "frida": 0,
+        "network_requests": 0,
+        "payloads_generated": 0,
+        "c9_frames_generated": 0,
+        "real_uploads": 0
+      }
+    },
+    {
+      "sample": "custom_not_applicable.handoff.json",
+      "manifest": "editor/artifacts/stage8c0_handoff_design/custom_not_applicable.handoff.json",
+      "target_firmware": "NJ-LEJ-2.1.7",
+      "status": "valid",
+      "firmware_compatible": true,
+      "safe_to_prepare_transfer": true,
+      "actual_artifact_sha256": "1D87836F3D985409F7787254B5ABFECAA81543D99082FAAC2FAC962B6ADBFC6C",
+      "actual_artifact_size": 351617,
+      "header_valid": true,
+      "offset_zero_valid": true,
+      "layout_valid": true,
+      "artifact_unchanged": true,
+      "transfer_unprepared": true,
+      "golden_status": "not_applicable",
+      "device_evidence_level": "C",
+      "warnings": [
+        "device_evidence_level_c"
+      ],
+      "errors": [],
+      "external_usage": {
+        "bleak_initializations": 0,
+        "ble_scans": 0,
+        "ble_connections": 0,
+        "ff02_writes": 0,
+        "ff03_notifications": 0,
+        "adb": 0,
+        "frida": 0,
+        "network_requests": 0,
+        "payloads_generated": 0,
+        "c9_frames_generated": 0,
+        "real_uploads": 0
+      }
+    }
+  ],
+  "boundary": "safe_to_prepare_transfer=true 仅表示离线前置条件通过，不表示允许真实上传"
+}

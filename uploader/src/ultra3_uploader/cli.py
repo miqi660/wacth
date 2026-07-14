@@ -90,6 +90,11 @@ def make_parser() -> argparse.ArgumentParser:
     compare_parser = subparsers.add_parser("compare-capture")
     compare_parser.add_argument("--file", required=True)
     compare_parser.add_argument("--capture", required=True)
+    handoff_parser = subparsers.add_parser("validate-handoff")
+    handoff_parser.add_argument("--manifest", type=Path, required=True)
+    handoff_parser.add_argument("--bundle-root", type=Path)
+    handoff_parser.add_argument("--target-firmware")
+    handoff_parser.add_argument("--json", action="store_true")
     scan_parser = subparsers.add_parser("scan")
     scan_parser.add_argument("--timeout", type=float, default=10.0)
     scan_parser.add_argument("--name", default=DEFAULT_DEVICE_NAME)
@@ -138,6 +143,50 @@ def make_parser() -> argparse.ArgumentParser:
     upload_parser.add_argument("--log-file", type=Path)
     upload_parser.add_argument("--dry-run", action="store_true")
     return parser
+
+
+def _validate_handoff_command(args: argparse.Namespace) -> int:
+    from .handoff import (
+        HandoffValidationStatus,
+        handoff_result_to_dict,
+        validate_handoff,
+    )
+
+    result = validate_handoff(
+        args.manifest,
+        bundle_root=args.bundle_root,
+        target_firmware=args.target_firmware,
+    )
+    if args.json:
+        print(json.dumps(handoff_result_to_dict(result), ensure_ascii=False, indent=2))
+    else:
+        print(f"status: {result.status.value}")
+        print(f"schema: {result.schema_version or 'unknown'}")
+        print(f"manifest: {result.manifest_path}")
+        print(f"artifact relative path: {result.artifact_relative_path or 'unknown'}")
+        print(f"artifact size: {result.actual_artifact_size if result.actual_artifact_size is not None else 'unknown'}")
+        print(f"expected SHA-256: {result.expected_artifact_sha256 or 'unknown'}")
+        print(f"actual SHA-256: {result.actual_artifact_sha256 or 'unknown'}")
+        print(f"header valid: {result.header_valid}")
+        print(f"offset 0 valid: {result.offset_zero_valid}")
+        print(f"layout valid: {result.layout_valid}")
+        print(f"artifact unchanged: {result.artifact_unchanged}")
+        print(f"firmware scope: {', '.join(result.firmware_scope) or 'unknown'}")
+        print(f"target firmware: {result.target_firmware or 'not provided'}")
+        print(f"firmware compatible: {result.firmware_compatible}")
+        print(f"transfer unprepared: {result.transfer_unprepared}")
+        print(f"device evidence: {result.device_evidence_level or 'unknown'}")
+        print(f"Golden status: {result.golden_status or 'unknown'}")
+        print(f"safe_to_prepare_transfer: {result.safe_to_prepare_transfer}")
+        print("warnings:")
+        for issue in result.warnings:
+            print(f"  - {issue.error_code}: {issue.message}")
+        print("errors:")
+        for issue in result.errors:
+            print(f"  - {issue.error_code}: {issue.message}")
+        print(f"external usage: {json.dumps(handoff_result_to_dict(result)['external_usage'], ensure_ascii=False, sort_keys=True)}")
+        print("boundary: 离线预检通过不表示静态传输协议、真机连接或真实上传可用")
+    return 0 if result.status is HandoffValidationStatus.VALID else 1
 
 
 def _logger(path: Path | None) -> "Stage5Logger":
@@ -446,6 +495,8 @@ def main(argv: list[str] | None = None) -> int:
             return build_packets(args.file, args.output, args.force)
         if args.command == "compare-capture":
             return compare(args.file, args.capture)
+        if args.command == "validate-handoff":
+            return _validate_handoff_command(args)
         if args.command == "scan":
             return asyncio.run(_scan_command(args))
         if args.command == "info":

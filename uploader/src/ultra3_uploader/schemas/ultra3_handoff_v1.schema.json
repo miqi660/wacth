@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/miqi660/wacth/docs/handoff/ultra3_handoff_v1.schema.json",
+  "title": "Ultra3 Editor to Uploader Handoff v1",
+  "description": "GreenLion Static DIY 完整 BIN 的离线交接契约；不是 BLE 协议定义。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "artifact_type",
+    "artifact_path",
+    "artifact_size",
+    "artifact_sha256",
+    "container",
+    "firmware_scope",
+    "builder_version",
+    "pillow_version",
+    "template_sha256",
+    "template_header_hex",
+    "template_offset_zero",
+    "layout",
+    "main_resource",
+    "thumbnail_resource",
+    "build_validation",
+    "device_evidence",
+    "transfer"
+  ],
+  "properties": {
+    "schema": {"const": "ultra3-handoff/v1"},
+    "artifact_type": {"const": "greenlion_static_diy_complete_bin"},
+    "artifact_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.(?:/|$))(?!.*//)(?!.*:)[^/\\\\\\u0000]+(?:/[^/\\\\\\u0000:]+)*$"
+    },
+    "artifact_size": {"const": 351617},
+    "artifact_sha256": {"type": "string", "pattern": "^[A-F0-9]{64}$"},
+    "container": {"const": "greenlion-static"},
+    "firmware_scope": {
+      "type": "array",
+      "prefixItems": [{"const": "NJ-LEJ-2.1.7"}],
+      "items": false,
+      "minItems": 1,
+      "maxItems": 1
+    },
+    "builder_version": {"const": "0.2.4-greenlion-exact"},
+    "pillow_version": {"const": "10.4.0"},
+    "template_sha256": {
+      "const": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC"
+    },
+    "template_header_hex": {
+      "const": "02 00 00 FF FF FF 00 00 80 01 40 01 FC 00 D2 00 00"
+    },
+    "template_offset_zero": {"const": 2},
+    "layout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["header", "main", "thumbnail"],
+      "properties": {
+        "header": {"$ref": "#/$defs/header_region"},
+        "main": {"$ref": "#/$defs/main_region"},
+        "thumbnail": {"$ref": "#/$defs/thumbnail_region"}
+      }
+    },
+    "main_resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "encoding"],
+      "properties": {
+        "width": {"const": 320},
+        "height": {"const": 384},
+        "encoding": {"const": "greenlion-next-high-rgb565"}
+      }
+    },
+    "thumbnail_resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "encoding", "source"],
+      "properties": {
+        "width": {"const": 210},
+        "height": {"const": 252},
+        "encoding": {"const": "greenlion-next-high-rgb565"},
+        "source": {"const": "auto-from-main-image"}
+      }
+    },
+    "build_validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "output_revalidated",
+        "input_unchanged",
+        "template_unchanged",
+        "golden_status",
+        "exact_golden_match",
+        "determinism_status"
+      ],
+      "properties": {
+        "output_revalidated": {"const": true},
+        "input_unchanged": {"const": true},
+        "template_unchanged": {"const": true},
+        "golden_status": {"enum": ["match", "not_applicable"]},
+        "exact_golden_match": {"type": ["boolean", "null"]},
+        "determinism_status": {"const": "not_evaluated"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"golden_status": {"const": "match"}}},
+          "then": {"properties": {"exact_golden_match": {"const": true}}}
+        },
+        {
+          "if": {"properties": {"golden_status": {"const": "not_applicable"}}},
+          "then": {"properties": {"exact_golden_match": {"const": null}}}
+        }
+      ]
+    },
+    "device_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "note"],
+      "properties": {
+        "level": {"const": "C"},
+        "note": {"type": "string", "minLength": 1}
+      }
+    },
+    "transfer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "payload_size", "chunk_count", "ble_frames_present"],
+      "properties": {
+        "status": {"const": "not_prepared"},
+        "payload_size": {"type": "null"},
+        "chunk_count": {"type": "null"},
+        "ble_frames_present": {"const": false}
+      }
+    }
+  },
+  "$defs": {
+    "header_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "length"],
+      "properties": {
+        "start": {"const": 0},
+        "end": {"const": 17},
+        "length": {"const": 17}
+      }
+    },
+    "main_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "length"],
+      "properties": {
+        "start": {"const": 17},
+        "end": {"const": 245777},
+        "length": {"const": 245760}
+      }
+    },
+    "thumbnail_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end", "length"],
+      "properties": {
+        "start": {"const": 245777},
+        "end": {"const": 351617},
+        "length": {"const": 105840}
+      }
+    }
+  }
+}

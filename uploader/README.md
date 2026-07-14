@@ -28,6 +28,28 @@ python -m ultra3_uploader compare-capture --file "C:\path\watchface.bin" --captu
 
 `build` 默认拒绝覆盖已有输出；只有显式传入 `--force` 才覆盖。
 
+### Stage 8C-1：Handoff v1 离线预检
+
+```powershell
+python -m ultra3_uploader validate-handoff `
+  --manifest .\watchface.handoff.json `
+  --target-firmware NJ-LEJ-2.1.7
+
+python -m ultra3_uploader validate-handoff `
+  --manifest .\watchface.handoff.json `
+  --bundle-root . `
+  --json
+```
+
+该命令使用 Uploader 包内逐字节冻结的 JSON Schema Draft 2020-12，严格读取 Manifest，并独立
+复核规范相对路径、bundle containment、351617 字节 artifact、SHA-256、17 字节 header、offset 0、
+固定布局、firmware scope 和 `transfer.status=not_prepared`。未提供目标固件时，合法 Bundle 返回
+`VALID`，但 `safe_to_prepare_transfer=false` 并产生 warning。
+
+`safe_to_prepare_transfer=true` 只表示离线 Handoff 满足未来传输准备的前置条件，不表示静态
+payload/C9 已实现，不表示可连接设备或执行真实上传。该命令不创建输出文件，不初始化 BLE，
+也不接受 `--device`、`--upload`、`--force` 或 payload 相关参数。
+
 ## Stage 5 BLE 命令
 
 ```powershell

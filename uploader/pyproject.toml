@@ -7,7 +7,7 @@ name = "ultra3-uploader"
 version = "0.3.0"
 description = "Ultra3 BCSDIAL 离线协议工具"
 requires-python = ">=3.10"
-dependencies = ["bleak>=0.22"]
+dependencies = ["bleak>=0.22", "jsonschema>=4.21,<5"]
 
 [project.scripts]
 ultra3-uploader = "ultra3_uploader.cli:main"
@@ -15,3 +15,6 @@ ultra3-uploader = "ultra3_uploader.cli:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+
+[tool.setuptools.package-data]
+"ultra3_uploader.schemas" = ["*.json"]
