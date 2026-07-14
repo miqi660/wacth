@@ -1,0 +1,62 @@
+{
+  "schema": "ultra3-handoff/v1",
+  "artifact_type": "greenlion_static_diy_complete_bin",
+  "artifact_path": "editor/artifacts/stage8b2_gui_builder/custom_not_applicable.bin",
+  "artifact_size": 351617,
+  "artifact_sha256": "1D87836F3D985409F7787254B5ABFECAA81543D99082FAAC2FAC962B6ADBFC6C",
+  "container": "greenlion-static",
+  "firmware_scope": [
+    "NJ-LEJ-2.1.7"
+  ],
+  "builder_version": "0.2.4-greenlion-exact",
+  "pillow_version": "10.4.0",
+  "template_sha256": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC",
+  "template_header_hex": "02 00 00 FF FF FF 00 00 80 01 40 01 FC 00 D2 00 00",
+  "template_offset_zero": 2,
+  "layout": {
+    "header": {
+      "start": 0,
+      "end": 17,
+      "length": 17
+    },
+    "main": {
+      "start": 17,
+      "end": 245777,
+      "length": 245760
+    },
+    "thumbnail": {
+      "start": 245777,
+      "end": 351617,
+      "length": 105840
+    }
+  },
+  "main_resource": {
+    "width": 320,
+    "height": 384,
+    "encoding": "greenlion-next-high-rgb565"
+  },
+  "thumbnail_resource": {
+    "width": 210,
+    "height": 252,
+    "encoding": "greenlion-next-high-rgb565",
+    "source": "auto-from-main-image"
+  },
+  "build_validation": {
+    "output_revalidated": true,
+    "input_unchanged": true,
+    "template_unchanged": true,
+    "golden_status": "not_applicable",
+    "exact_golden_match": null,
+    "determinism_status": "not_evaluated"
+  },
+  "device_evidence": {
+    "level": "C",
+    "note": "离线构建与归档上传文字证据存在；逐样本真机截图和抓包尚未归档。"
+  },
+  "transfer": {
+    "status": "not_prepared",
+    "payload_size": null,
+    "chunk_count": null,
+    "ble_frames_present": false
+  }
+}

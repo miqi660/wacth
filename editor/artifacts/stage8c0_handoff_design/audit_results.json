@@ -1,0 +1,302 @@
+{
+  "status": "COMPLETE",
+  "schema": "ultra3-handoff/v1",
+  "schema_draft": "https://json-schema.org/draft/2020-12/schema",
+  "schema_sha256": "FB4E5BBFEC42D0E75F251B5512A374CB3E222625711B79653C3C07638B331DA5",
+  "schema_errors": [],
+  "sample_errors": {
+    "golden_match.handoff.json": [],
+    "custom_not_applicable.handoff.json": []
+  },
+  "sample_count": 2,
+  "samples_passed": 2,
+  "path_acceptance_tests": 4,
+  "path_rejection_tests": 19,
+  "sha_format_tests": 8,
+  "original_contract_tests": 20,
+  "tests_passed": 51,
+  "tests_total": 51,
+  "tests_failed": 0,
+  "tests": [
+    {
+      "name": "golden_sample_valid",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "not_applicable_sample_valid",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_schema_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "absolute_path_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "parent_traversal_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_size_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_sha_format_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "offset_zero_not_two_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_header_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_main_region_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "wrong_thumbnail_region_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "prepared_status_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "payload_size_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "chunk_count_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "ble_frames_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "top_bottom_field_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "device_address_field_rejected",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "private_absolute_path_scan_zero",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "artifact_sha_matches_real_bin",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "schema_and_samples_reproducible",
+      "category": "original_contract",
+      "passed": true
+    },
+    {
+      "name": "canonical_path_accepted_1",
+      "category": "path_acceptance",
+      "passed": true
+    },
+    {
+      "name": "canonical_path_accepted_2",
+      "category": "path_acceptance",
+      "passed": true
+    },
+    {
+      "name": "canonical_path_accepted_3",
+      "category": "path_acceptance",
+      "passed": true
+    },
+    {
+      "name": "canonical_path_accepted_4",
+      "category": "path_acceptance",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_1",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_2",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_3",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_4",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_5",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_6",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_7",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_8",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_9",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_10",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_11",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_12",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_13",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_14",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_15",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_16",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_17",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_18",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "noncanonical_path_rejected_19",
+      "category": "path_rejection",
+      "passed": true
+    },
+    {
+      "name": "uppercase_sha_accepted",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "lowercase_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "mixed_case_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "short_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "long_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "non_hex_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "leading_space_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    },
+    {
+      "name": "trailing_space_sha_rejected",
+      "category": "sha_format",
+      "passed": true
+    }
+  ],
+  "actual_artifact_sha256": {
+    "golden_match.handoff.json": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+    "custom_not_applicable.handoff.json": "1D87836F3D985409F7787254B5ABFECAA81543D99082FAAC2FAC962B6ADBFC6C"
+  },
+  "content_scans": {
+    "private_path_hits": 0,
+    "device_address_hits": 0,
+    "top_bottom_hits": 0
+  },
+  "production_source_diff": {
+    "editor/src": "",
+    "uploader/src": ""
+  },
+  "external_usage": {
+    "bleak_initializations": 0,
+    "ble_scans": 0,
+    "ble_connections": 0,
+    "ff02_writes": 0,
+    "ff03_notifications": 0,
+    "adb": 0,
+    "frida": 0,
+    "uploader_runtime_calls": 0,
+    "network_requests": 0,
+    "real_uploads": 0
+  }
+}
