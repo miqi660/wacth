@@ -22,6 +22,22 @@ class StaticTransferPlanError(Ultra3UploaderError):
     """静态 Handoff 离线传输计划无效或无法生成。"""
 
 
+class FixedStaticProfileError(StaticTransferPlanError):
+    """固定静态传输 Profile 不受支持或参数不匹配。"""
+
+
+class FixedStaticControlFrameError(StaticTransferPlanError):
+    """固定静态 C8/CA 控制帧不符合冻结证据。"""
+
+
+class FixedStaticVerificationError(StaticTransferPlanError):
+    """固定静态离线传输计划复核失败。"""
+
+
+class FixedStaticOutputError(StaticTransferPlanError):
+    """固定静态离线计划无法安全写入。"""
+
+
 class BleTransportError(Ultra3UploaderError):
     """BLE 后端操作失败。"""
 

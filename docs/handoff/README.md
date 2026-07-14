@@ -11,6 +11,7 @@
 | GreenLion Static DIY 完整 BIN（351617） | Handoff v1 离线验证入口已实现 | OFFLINE VALIDATION ONLY |
 | 冻结 Builder 派生 payload（353146） | 仅可作为显式、哈希锁定的离线计划输入；不是完整 C9 帧流 | OFFLINE PLAN ONLY |
 | 已组装 C9 帧 | 可生成和离线复核确定性计划；不发送 BLE | OFFLINE PLAN ONLY |
+| NJLEJ 2.1.7 固定 C8/C9/CA 序列 | 只支持 351617-byte static container 与 1529 个 C9 | FIXED-PROFILE OFFLINE PLAN ONLY |
 | 静态 DIY 真机上传 | 尚未由当前 Uploader 实现或验证 | UNKNOWN |
 
 现有 Uploader 对其支持的动态 BCSDIAL 文件直接按 230 字节切块，计算 sequence checksum，
@@ -105,6 +106,24 @@ python -m ultra3_uploader validate-handoff --manifest .\watchface.handoff.json
 
 `upload-handoff` 仍未实现。Stage 8C-3A 只增加显式 payload 到确定性 C9 frame plan 的离线构建、
 检查和复核，不连接设备，不改变 Handoff v1 的 source artifact 语义。
+
+## Stage 8C-3C 固定 Profile 边界
+
+Stage 8C-3B 的两次成功 Binder 抓取为 `NJ-LEJ-2.1.7`、351617-byte
+`static_container` 冻结了 exact C8 `BCC8020701815D0500F905E2` 和 exact CA
+`BCCA02010505`。Stage 8C-3C 仅据此构建 `C8 -> C9[0..1528] -> CA` 的 1531 帧离线计划。
+
+术语和大小必须分层：
+
+- `input_image`：Builder 的原始 JPG/PNG 输入。
+- `static_container`：351617-byte BIN，也是所有 C9 DATA 拼接。
+- `region_stream`：353146-byte DATA+checksum 拼接。
+- `c9_frame_stream`：362320-byte 完整 C9 帧拼接。
+- `full_transfer_stream`：362338-byte C8+C9+CA 拼接。
+
+固定 Profile 不证明 C8 字段布局可推广到其他大小/固件，也不证明 CA 末尾 `05` 的通用语义。
+生成的 `full_transfer_stream.bin` 是纯离线序列，不是已发送记录。可变大小控制帧、BLE transport、
+FF03 ACK、重试和真实上传仍未实现。
 
 ## 所有权与错误边界
 

@@ -74,6 +74,28 @@ python -m ultra3_uploader verify-static-plan --plan .\static-plan --json
 现有 `build_c9()`、`parse_c9()` 与 checksum 实现。此能力不构成静态真机上传，也不接受
 `--device`、不初始化 Bleak、不读取 FF03、不写 FF02。
 
+### Stage 8C-3C：NJLEJ 2.1.7 固定静态控制计划
+
+Stage 8C-3C 根据两次成功的 Stage 8C-3B Binder 抓取，只为
+`NJ-LEJ-2.1.7 / 351617-byte static_container / 1529 C9` 固定 Profile 生成完整离线序列：
+
+```powershell
+python -m ultra3_uploader build-fixed-static-plan `
+  --source .\watchface.bin `
+  --output .\transfer_plan `
+  --profile njlej-2.1.7-fixed-static `
+  --json
+```
+
+输出目录独占创建，固定包含 `manifest.json`、12-byte `c8.bin`、362320-byte
+`c9_frames.bin`、6-byte `ca.bin` 和 362338-byte `full_transfer_stream.bin`。完整离线顺序为
+`C8 -> C9[0..1528] -> CA`，共 1531 帧。C8 固定为
+`BCC8020701815D0500F905E2`，CA 固定为 `BCCA02010505`；C9 仍只调用现有 `build_c9()`。
+
+该命令拒绝任何非 351617-byte 输入，不支持其他固件、大小或包数。输出只是依据真机证据组装并
+复核的离线计划，不代表 Uploader 已发送或真机上传已验证；命令没有设备参数，不初始化 Bleak，
+不扫描、不连接、不订阅 FF03，也不写 FF02。
+
 ## Stage 5 BLE 命令
 
 ```powershell

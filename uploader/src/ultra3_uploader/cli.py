@@ -109,6 +109,15 @@ def make_parser() -> argparse.ArgumentParser:
     static_verify_parser = subparsers.add_parser("verify-static-plan")
     static_verify_parser.add_argument("--plan", type=Path, required=True)
     static_verify_parser.add_argument("--json", action="store_true")
+    fixed_static_parser = subparsers.add_parser("build-fixed-static-plan")
+    fixed_static_parser.add_argument("--source", type=Path, required=True)
+    fixed_static_parser.add_argument("--output", type=Path, required=True)
+    fixed_static_parser.add_argument(
+        "--profile",
+        choices=("njlej-2.1.7-fixed-static",),
+        default="njlej-2.1.7-fixed-static",
+    )
+    fixed_static_parser.add_argument("--json", action="store_true")
     scan_parser = subparsers.add_parser("scan")
     scan_parser.add_argument("--timeout", type=float, default=10.0)
     scan_parser.add_argument("--name", default=DEFAULT_DEVICE_NAME)
@@ -261,6 +270,37 @@ def _verify_static_plan_command(args: argparse.Namespace) -> int:
     result = verify_static_plan(args.plan)
     _print_static_verification(result, json_output=args.json)
     return 0 if result.exact_match else 1
+
+
+def _build_fixed_static_plan_command(args: argparse.Namespace) -> int:
+    from .errors import FixedStaticProfileError
+    from .fixed_static import (
+        NJLEJ_217_FIXED_STATIC,
+        build_fixed_static_transfer_plan,
+        write_fixed_static_transfer_plan,
+    )
+
+    try:
+        static_container = args.source.read_bytes()
+    except OSError as exc:
+        raise FixedStaticProfileError(f"无法读取 static_container: {exc}") from exc
+    plan = build_fixed_static_transfer_plan(
+        static_container, profile=NJLEJ_217_FIXED_STATIC
+    )
+    write_fixed_static_transfer_plan(plan, args.output)
+    document = plan.to_manifest_dict()
+    if args.json:
+        print(json.dumps(document, ensure_ascii=False, indent=2))
+    else:
+        print(f"result: {plan.verification.result}")
+        print(f"profile: {document['profile']}")
+        print(f"static_container size: {document['static_container_size']}")
+        print(f"C8: {document['c8']['hex']}")
+        print(f"C9 frames: {document['c9_count']}")
+        print(f"CA: {document['ca']['hex']}")
+        print(f"total writes: {document['total_write_count']}")
+        print("boundary: OFFLINE PLAN ONLY; BLE usage: 0")
+    return 0
 
 
 def _logger(path: Path | None) -> "Stage5Logger":
@@ -577,6 +617,8 @@ def main(argv: list[str] | None = None) -> int:
             return _inspect_static_plan_command(args)
         if args.command == "verify-static-plan":
             return _verify_static_plan_command(args)
+        if args.command == "build-fixed-static-plan":
+            return _build_fixed_static_plan_command(args)
         if args.command == "scan":
             return asyncio.run(_scan_command(args))
         if args.command == "info":
