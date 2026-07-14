@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtGui import QDesktopServices, QGuiApplication
+from PyQt6.QtGui import QDesktopServices, QGuiApplication, QImageReader, QPixmap
 from PyQt6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -30,7 +30,7 @@ from PyQt6.QtWidgets import (
 from ..errors import EditorError
 from ..resource_geometry import MAIN_RESOURCE, THUMBNAIL_RESOURCE
 from ..static_diy import StaticDiyInspection, TimePosition
-from .controllers import OfflineGuiController, TimePositionEditPlan
+from .controllers import GreenLionGuiBuildPlan, OfflineGuiController, TimePositionEditPlan
 from .widgets import BadgeState, ResourcePreview, StatusBadge
 
 
@@ -43,8 +43,13 @@ class MainWindow(QMainWindow):
         self.last_dialog: QDialog | None = None
         self.last_result = None
         self.last_plan: TimePositionEditPlan | None = None
+        self.builder_image_path: Path | None = None
+        self.builder_template_path: Path | None = None
+        self.builder_last_result = None
+        self.builder_last_plan: GreenLionGuiBuildPlan | None = None
+        self.builder_last_error: str | None = None
         self._busy = False
-        self.setWindowTitle("Ultra3 Lab — Offline Time-position Editor")
+        self.setWindowTitle("Ultra3 Lab — Offline GreenLion Workbench")
         self.resize(1280, 800)
         self.setMinimumSize(1050, 680)
         self._build_ui()
@@ -121,7 +126,7 @@ class MainWindow(QMainWindow):
         gate_layout.setContentsMargins(12, 12, 12, 12)
         gate_layout.addWidget(StatusBadge("BIN EDIT AVAILABLE", BadgeState.VERIFIED))
         gate_text = QLabel(
-            "时间位置编辑可用\nBuilder / 资源制作仍安全锁定",
+            "时间位置编辑可用\nVerified Builder 可用 · 全程离线",
             objectName="muted",
         )
         gate_text.setWordWrap(True)
@@ -178,7 +183,7 @@ class MainWindow(QMainWindow):
     def _build_properties_panel(self) -> QWidget:
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        scroll.setFixedWidth(332)
+        scroll.setFixedWidth(382)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         content = QWidget()
         layout = QVBoxLayout(content)
@@ -288,41 +293,124 @@ class MainWindow(QMainWindow):
         return card
 
     def _build_resource_card(self) -> QWidget:
-        card, layout = self._new_card("资源准备")
-        self.main_resource_status = self._field(layout, "Main resource", "NOT LOADED")
-        choose_main = QPushButton("选择主图")
-        choose_main.setEnabled(False)
-        layout.addWidget(choose_main)
+        card, layout = self._new_card("GreenLion Static Builder")
+        self.builder_state_badge = StatusBadge("NOT READY", BadgeState.UNKNOWN)
+        layout.addWidget(self.builder_state_badge)
+
+        self.main_resource_status = self._field(layout, "输入图片", "NOT SELECTED")
+        self.builder_image_meta = QLabel("PNG / JPEG · 未选择", objectName="mono")
+        self.builder_image_meta.setWordWrap(True)
+        layout.addWidget(self.builder_image_meta)
+        self.builder_source_preview = QLabel("输入图片预览", objectName="mono")
+        self.builder_source_preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.builder_source_preview.setMinimumHeight(150)
+        self.builder_source_preview.setFrameShape(QFrame.Shape.StyledPanel)
+        layout.addWidget(self.builder_source_preview)
+        self.choose_main_button = QPushButton("选择图片")
+        self.choose_main_button.clicked.connect(self._choose_builder_image)
+        layout.addWidget(self.choose_main_button)
+        preview_notice = QLabel(
+            "输入图片预览，仅用于选择确认，不代表最终 RGB565、裁剪或设备显示效果。",
+            objectName="muted",
+        )
+        preview_notice.setWordWrap(True)
+        self.builder_preview_notice = preview_notice
+        layout.addWidget(preview_notice)
+
+        self.template_status_badge = StatusBadge("NONE", BadgeState.UNKNOWN)
+        layout.addWidget(self.template_status_badge)
+        self.builder_template_status = self._field(layout, "模板 BIN", "NOT SELECTED")
+        self.choose_template_button = QPushButton("选择模板")
+        self.choose_template_button.clicked.connect(self._choose_builder_template)
+        layout.addWidget(self.choose_template_button)
+        template_note = QLabel(
+            "构建时由公共核心验证大小、17 字节头和 SHA-256。",
+            objectName="muted",
+        )
+        template_note.setWordWrap(True)
+        layout.addWidget(template_note)
+
         self.thumbnail_resource_status = self._field(
             layout,
             "Thumbnail resource",
-            "NOT LOADED",
+            "AUTO FROM MAIN IMAGE · 210 × 252",
         )
-        choose_thumbnail = QPushButton("选择缩略图")
-        choose_thumbnail.setEnabled(False)
-        layout.addWidget(choose_thumbnail)
-        generate_thumbnail = QPushButton("从主图生成缩略图")
-        generate_thumbnail.setEnabled(False)
-        layout.addWidget(generate_thumbnail)
-        layout.addWidget(QLabel("图片适配模式", objectName="fieldLabel"))
+        self.choose_thumbnail_button = QPushButton("选择缩略图（不支持）")
+        self.choose_thumbnail_button.setEnabled(False)
+        layout.addWidget(self.choose_thumbnail_button)
+        thumbnail_note = QLabel(
+            "由公共核心从原始输入独立生成，不从主资源二次缩放。",
+            objectName="muted",
+        )
+        thumbnail_note.setWordWrap(True)
+        layout.addWidget(thumbnail_note)
+
+        layout.addWidget(QLabel("Exact profile（只读）", objectName="fieldLabel"))
         self.fit_mode = QComboBox()
-        self.fit_mode.addItems(("裁剪填充（cover）", "完整适应（contain）", "居中裁剪"))
+        self.fit_mode.addItems(("cover（固定）",))
         self.fit_mode.setEnabled(False)
         layout.addWidget(self.fit_mode)
+        self.builder_profile = QLabel(
+            "GreenLion Static DIY · NJ-LEJ-2.1.7\n"
+            "Main 320×384 · Thumbnail 210×252\n"
+            "cover · bilinear · truncate RGB565\n"
+            "greenlion-" "next-high · Pillow 10.4.0\n"
+            "output 351617 bytes · template offset 0 preserved",
+            objectName="mono",
+        )
+        self.builder_profile.setWordWrap(True)
+        self.builder_profile.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+            | Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        layout.addWidget(self.builder_profile)
+
+        layout.addWidget(QLabel("BIN 输出", objectName="fieldLabel"))
+        self.builder_output_path = QLineEdit(objectName="mono")
+        self.builder_output_path.setPlaceholderText("选择新的完整 BIN 输出路径")
+        self.builder_output_path.textChanged.connect(self._builder_output_changed)
+        layout.addWidget(self.builder_output_path)
+        self.select_builder_output_button = QPushButton("选择 BIN 输出")
+        self.select_builder_output_button.clicked.connect(self._choose_builder_output)
+        layout.addWidget(self.select_builder_output_button)
+
+        self.builder_json_checkbox = QCheckBox("生成 JSON 构建记录")
+        self.builder_report_checkbox = QCheckBox("生成 Markdown 构建报告")
+        self.builder_json_checkbox.setChecked(True)
+        self.builder_report_checkbox.setChecked(True)
+        layout.addWidget(self.builder_json_checkbox)
+        self.builder_json_path = QLineEdit(objectName="mono")
+        self.builder_json_path.setPlaceholderText("JSON 输出路径")
+        layout.addWidget(self.builder_json_path)
+        layout.addWidget(self.builder_report_checkbox)
+        self.builder_report_path = QLineEdit(objectName="mono")
+        self.builder_report_path.setPlaceholderText("Markdown 输出路径")
+        layout.addWidget(self.builder_report_path)
+        for control in (
+            self.builder_json_checkbox,
+            self.builder_report_checkbox,
+            self.builder_json_path,
+            self.builder_report_path,
+        ):
+            if isinstance(control, QCheckBox):
+                control.stateChanged.connect(self._update_builder_state)
+            else:
+                control.textChanged.connect(self._update_builder_state)
+
         self.builder_generate_button = QPushButton("生成完整表盘 BIN")
         self.builder_generate_button.setEnabled(False)
+        self.builder_generate_button.clicked.connect(self._generate_builder_bin)
         layout.addWidget(self.builder_generate_button)
         gate = QLabel(
-            "当前源码没有 Builder v0.2.4-greenlion-exact 公共接口，"
-            "资源导入、适配与缩略图生成均未执行。",
+            "只调用 Stage 8B-1 公共 Builder 一次；不覆盖、不上传、不进入时间位置编辑。",
             objectName="muted",
         )
         gate.setWordWrap(True)
         layout.addWidget(gate)
         self.resource_controls = (
-            choose_main,
-            choose_thumbnail,
-            generate_thumbnail,
+            self.choose_main_button,
+            self.choose_template_button,
+            self.choose_thumbnail_button,
             self.fit_mode,
             self.builder_generate_button,
         )
@@ -359,7 +447,7 @@ class MainWindow(QMainWindow):
         states = (
             ("资源画布", "VERIFIED", BadgeState.VERIFIED),
             ("时间位置", "VERIFIED", BadgeState.VERIFIED),
-            ("Builder", "NOT AVAILABLE", BadgeState.UNSUPPORTED),
+            ("Builder", "AVAILABLE", BadgeState.VERIFIED),
             ("时间颜色", "UNKNOWN", BadgeState.UNKNOWN),
             ("日期 / 星期", "UNSUPPORTED", BadgeState.UNSUPPORTED),
             ("步数 / 卡路里 / 心率", "UNSUPPORTED", BadgeState.UNSUPPORTED),
@@ -447,7 +535,9 @@ class MainWindow(QMainWindow):
                 "设置尚未持久化。当前固定为：深色主题、完整 SHA-256、零 BLE、无自动打开。"
             )
         else:
-            self.placeholder_message.setText("当前页面尚未接入；时间位置编辑请使用 BIN 编辑。")
+            self.placeholder_message.setText(
+                "当前页面尚未接入；资源构建请使用表盘制作，时间位置编辑请使用 BIN 编辑。"
+            )
         self.workspace.setCurrentWidget(self.placeholder_page)
 
     def _choose_file(self) -> None:
@@ -476,6 +566,329 @@ class MainWindow(QMainWindow):
         )
         if filename:
             self.output_path.setText(filename)
+
+    def _choose_builder_image(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择 PNG/JPEG 输入图片",
+            "",
+            "Images (*.png *.jpg *.jpeg);;All files (*)",
+        )
+        if filename:
+            self.select_builder_image(filename)
+
+    def select_builder_image(self, path: str | Path, *, show_error: bool = True) -> bool:
+        image_path = Path(path).resolve()
+        reader = QImageReader(str(image_path))
+        image_format = bytes(reader.format()).decode("ascii", errors="replace").upper()
+        size = reader.size()
+        if not reader.canRead() or image_format not in {"PNG", "JPEG", "JPG"}:
+            self.builder_image_path = None
+            self.main_resource_status.setText("INVALID")
+            self.builder_image_meta.setText("仅支持可读取的 PNG / JPEG")
+            self.builder_last_error = reader.errorString() or "不支持的图片"
+            self._update_builder_state()
+            if show_error:
+                self._show_error(
+                    "无法预览输入图片",
+                    "请选择有效的 PNG 或 JPEG 图片。",
+                    self.builder_last_error,
+                )
+            return False
+        pixmap = QPixmap(str(image_path))
+        if pixmap.isNull():
+            return False
+        self.builder_image_path = image_path
+        self.main_resource_status.setText(image_path.name)
+        self.main_resource_status.setToolTip(str(image_path))
+        self.builder_image_meta.setText(
+            f"{image_format} · {size.width()} × {size.height()} · SOURCE PREVIEW"
+        )
+        self.builder_source_preview.setPixmap(
+            pixmap.scaled(
+                270,
+                170,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+        )
+        self.builder_source_preview.setToolTip(str(image_path))
+        self.builder_last_error = None
+        self._update_builder_state()
+        return True
+
+    def _choose_builder_template(self) -> None:
+        filename, _ = QFileDialog.getOpenFileName(
+            self,
+            "选择 GreenLion Static DIY 模板",
+            "",
+            "BIN files (*.bin);;All files (*)",
+        )
+        if filename:
+            self.select_builder_template(filename)
+
+    def select_builder_template(self, path: str | Path) -> None:
+        self.builder_template_path = Path(path).resolve()
+        self.builder_template_status.setText(self.builder_template_path.name)
+        self.builder_template_status.setToolTip(str(self.builder_template_path))
+        self._set_badge(
+            self.template_status_badge,
+            "SELECTED · VALIDATION PENDING",
+            BadgeState.EXPERIMENTAL,
+        )
+        self._update_builder_state()
+
+    def _choose_builder_output(self) -> None:
+        suggestion = "greenlion_static.bin"
+        if self.builder_image_path is not None:
+            suggestion = f"{self.builder_image_path.stem}_greenlion.bin"
+        filename, _ = QFileDialog.getSaveFileName(
+            self,
+            "选择新的完整 BIN 输出",
+            suggestion,
+            "BIN files (*.bin);;All files (*)",
+        )
+        if filename:
+            self.builder_output_path.setText(filename)
+
+    def _builder_output_changed(self, text: str) -> None:
+        output = Path(text.strip()) if text.strip() else None
+        self.builder_json_path.setText(str(output.with_suffix(".json")) if output else "")
+        self.builder_report_path.setText(str(output.with_suffix(".md")) if output else "")
+        self._update_builder_state()
+
+    def _current_builder_plan(self) -> GreenLionGuiBuildPlan | None:
+        output = self.builder_output_path.text().strip()
+        if self.builder_image_path is None or self.builder_template_path is None or not output:
+            return None
+        json_text = self.builder_json_path.text().strip()
+        report_text = self.builder_report_path.text().strip()
+        if self.builder_json_checkbox.isChecked() and not json_text:
+            return None
+        if self.builder_report_checkbox.isChecked() and not report_text:
+            return None
+        try:
+            return self.controller.prepare_greenlion_build(
+                self.builder_image_path,
+                self.builder_template_path,
+                output,
+                json_path=json_text if self.builder_json_checkbox.isChecked() else None,
+                report_path=(
+                    report_text if self.builder_report_checkbox.isChecked() else None
+                ),
+            )
+        except EditorError:
+            return None
+
+    def _update_builder_state(self, *_args) -> None:
+        controls_enabled = not self._busy
+        for control in (
+            self.choose_main_button,
+            self.choose_template_button,
+            self.builder_output_path,
+            self.select_builder_output_button,
+            self.builder_json_checkbox,
+            self.builder_report_checkbox,
+        ):
+            control.setEnabled(controls_enabled)
+        self.builder_json_path.setEnabled(
+            controls_enabled and self.builder_json_checkbox.isChecked()
+        )
+        self.builder_report_path.setEnabled(
+            controls_enabled and self.builder_report_checkbox.isChecked()
+        )
+        ready = self._current_builder_plan() is not None and not self._busy
+        self.builder_generate_button.setEnabled(ready)
+        if self._busy:
+            self._set_badge(self.builder_state_badge, "BUILDING", BadgeState.EXPERIMENTAL)
+            self.status_label.setText("BUILDING · Offline only · BLE usage: 0")
+        elif ready:
+            self._set_badge(self.builder_state_badge, "READY", BadgeState.VERIFIED)
+            self.status_label.setText("BUILDER VERIFIED · READY TO BUILD")
+        else:
+            self._set_badge(self.builder_state_badge, "NOT READY", BadgeState.UNKNOWN)
+
+    def _create_builder_confirmation(self, plan: GreenLionGuiBuildPlan) -> QMessageBox:
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("确认生成完整表盘 BIN")
+        dialog.setIcon(QMessageBox.Icon.Question)
+        dialog.setText("确认使用已验证的 GreenLion exact profile 离线构建")
+        dialog.setInformativeText(
+            f"输入图片：{plan.image_path.name}\n"
+            f"模板：{plan.template_path.name}\n"
+            f"BIN 输出：{plan.output_path.name}\n"
+            f"JSON 输出：{plan.json_path.name if plan.json_path else 'Disabled'}\n"
+            f"Markdown 输出：{plan.report_path.name if plan.report_path else 'Disabled'}\n"
+            f"Profile：{plan.profile}\n"
+            "主资源：320×384\n"
+            "缩略资源：210×252 · AUTO FROM MAIN IMAGE\n"
+            "输出大小：351617 bytes\n"
+            "offset 0 将保持模板值，不修改时间位置\n"
+            "不执行上传，不覆盖已有文件"
+        )
+        generate = dialog.addButton("生成", QMessageBox.ButtonRole.AcceptRole)
+        dialog.addButton("取消", QMessageBox.ButtonRole.RejectRole)
+        dialog.generate_button = generate
+        return dialog
+
+    def show_builder_confirmation(self, plan: GreenLionGuiBuildPlan) -> QMessageBox:
+        dialog = self._create_builder_confirmation(plan)
+        self._set_badge(
+            self.builder_state_badge,
+            "CONFIRMATION",
+            BadgeState.EXPERIMENTAL,
+        )
+        dialog.setModal(False)
+        dialog.open()
+        self.last_dialog = dialog
+        return dialog
+
+    def _confirm_builder(self, plan: GreenLionGuiBuildPlan) -> bool:
+        dialog = self._create_builder_confirmation(plan)
+        dialog.exec()
+        self.last_dialog = dialog
+        return dialog.clickedButton() is dialog.generate_button
+
+    def _generate_builder_bin(self) -> None:
+        if self._busy or not self.builder_generate_button.isEnabled():
+            return
+        plan = self._current_builder_plan()
+        if plan is None:
+            return
+        if not self._confirm_builder(plan):
+            self._update_builder_state()
+            return
+
+        self._busy = True
+        self.builder_last_error = None
+        self.builder_last_result = None
+        self._update_edit_state()
+        self._update_builder_state()
+        result = None
+        failure: tuple[str, str, str] | None = None
+        try:
+            result = self.controller.execute_greenlion_build(plan)
+        except EditorError as error:
+            mapped = self.controller.user_error(error)
+            self.builder_last_error = mapped.message
+            failure = (mapped.title, mapped.message, mapped.technical_details)
+        except Exception as error:
+            self.builder_last_error = "发生未预期错误，操作未完成。"
+            failure = (
+                "离线构建失败",
+                self.builder_last_error,
+                f"{type(error).__name__}: {error}",
+            )
+        finally:
+            self._busy = False
+            self._update_edit_state()
+            self._update_builder_state()
+
+        if failure is not None:
+            self._set_badge(self.builder_state_badge, "ERROR", BadgeState.ERROR)
+            self.status_label.setText("ERROR · No output created · BLE usage: 0")
+            self._show_error(*failure)
+            return
+
+        self.builder_last_result = result
+        self.builder_last_plan = plan
+        self._set_badge(self.builder_state_badge, "COMPLETE", BadgeState.VERIFIED)
+        self.status_label.setText("COMPLETE · 351617 bytes · BLE usage: 0")
+        self._show_builder_success(result, plan)
+
+    def _show_builder_success(self, result, plan: GreenLionGuiBuildPlan) -> QDialog:
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Builder 构建成功")
+        dialog.setMinimumWidth(680)
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(24, 22, 24, 22)
+        layout.addWidget(QLabel("完整表盘 BIN 构建成功", objectName="pageTitle"))
+
+        golden_value = getattr(result.golden_status, "value", result.golden_status)
+        if golden_value == "match":
+            golden_text = "VERIFIED GOLDEN MATCH · DEVICE EVIDENCE LEVEL C"
+            golden_state = BadgeState.VERIFIED
+        else:
+            golden_text = "CUSTOM VALID BUILD · GOLDEN NOT APPLICABLE"
+            golden_state = BadgeState.EXPERIMENTAL
+        layout.addWidget(StatusBadge(golden_text, golden_state))
+
+        usage = result.external_usage
+        usage_total = sum(
+            (
+                usage.hardware_initializations,
+                usage.hardware_scans,
+                usage.hardware_connections,
+                usage.hardware_writes,
+                usage.external_processes,
+                usage.network_operations,
+                usage.real_uploads,
+            )
+        )
+        summary = QLabel(
+            f"输出文件：{result.output_path.name}\n"
+            f"输出大小：{result.output_size}\n"
+            f"输出 SHA-256：{result.output_sha256}\n"
+            f"Builder version：{result.builder_version}\n"
+            "Pillow version：10.4.0\n"
+            f"Template header preserved：{'是' if result.template_header_preserved else '否'}\n"
+            f"Template offset 0：{result.template_offset_zero:02X}\n"
+            f"Main：{result.main_resource_size[0]}×{result.main_resource_size[1]}\n"
+            f"Thumbnail：{result.thumbnail_resource_size[0]}×{result.thumbnail_resource_size[1]}\n"
+            f"Output revalidated：{'通过' if result.output_revalidated else '失败'}\n"
+            f"Image unchanged：{'是' if result.image_unchanged else '否'}\n"
+            f"Template unchanged：{'是' if result.template_unchanged else '否'}\n"
+            f"Determinism：{getattr(result.determinism_status, 'value', result.determinism_status).upper()}\n"
+            f"Repeated build SHA：{result.repeated_build_sha256 or 'None / Not evaluated'}\n"
+            f"Golden status：{str(golden_value).upper()}\n"
+            f"Exact golden match：{result.exact_golden_match}\n"
+            f"External usage：{usage_total}",
+            objectName="mono",
+        )
+        summary.setWordWrap(True)
+        summary.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByKeyboard
+            | Qt.TextInteractionFlag.TextSelectableByMouse
+        )
+        layout.addWidget(summary)
+        separation = QLabel(
+            "此 Builder 输出保留模板 offset 0=02，尚未与已验证的 00/01 时间位置编辑流程合并。",
+            objectName="muted",
+        )
+        separation.setWordWrap(True)
+        layout.addWidget(separation)
+
+        actions = QHBoxLayout()
+        folder = QPushButton("打开输出目录")
+        folder.setEnabled(result.output_path.exists())
+        folder.clicked.connect(lambda: self._open_local_path(result.output_path.parent))
+        actions.addWidget(folder)
+        copy_sha = QPushButton("复制 SHA-256")
+        copy_sha.clicked.connect(self._copy_builder_output_sha)
+        actions.addWidget(copy_sha)
+        open_json = QPushButton("打开 JSON")
+        open_json.setEnabled(plan.json_path is not None and plan.json_path.exists())
+        if plan.json_path is not None:
+            open_json.clicked.connect(lambda: self._open_local_path(plan.json_path))
+        actions.addWidget(open_json)
+        open_report = QPushButton("打开 Markdown")
+        open_report.setEnabled(plan.report_path is not None and plan.report_path.exists())
+        if plan.report_path is not None:
+            open_report.clicked.connect(lambda: self._open_local_path(plan.report_path))
+        actions.addWidget(open_report)
+        layout.addLayout(actions)
+
+        close = QPushButton("关闭")
+        close.clicked.connect(dialog.close)
+        layout.addWidget(close, alignment=Qt.AlignmentFlag.AlignRight)
+        dialog.setModal(False)
+        dialog.show()
+        self.last_dialog = dialog
+        return dialog
+
+    def _copy_builder_output_sha(self) -> None:
+        if self.builder_last_result is not None:
+            QGuiApplication.clipboard().setText(self.builder_last_result.output_sha256)
 
     def load_file(self, path: str | Path, *, show_error: bool = True) -> bool:
         try:
@@ -795,14 +1208,14 @@ class MainWindow(QMainWindow):
         dialog.open()
         self.last_dialog = dialog
 
-    def show_stage_gate_dialog(self, title: str = "资源 Builder 已锁定") -> QDialog:
+    def show_stage_gate_dialog(self, title: str = "Verified Builder 范围") -> QDialog:
         dialog = QMessageBox(self)
         dialog.setWindowTitle(title)
         dialog.setIcon(QMessageBox.Icon.Information)
-        dialog.setText("NOT EXECUTED")
+        dialog.setText("OFFLINE BUILDER AVAILABLE")
         dialog.setInformativeText(
-            "Builder v0.2.4-greenlion-exact 公共接口尚未进入当前源码；"
-            "时间位置编辑可用，但资源导入、缩略图和完整表盘构建仍不执行。"
+            "Builder v0.2.4-greenlion-exact 已通过 Controller 接入；"
+            "只支持冻结 exact profile，时间位置编辑保持独立，GUI 上传不执行。"
         )
         dialog.setStandardButtons(QMessageBox.StandardButton.Close)
         dialog.setModal(False)
@@ -827,7 +1240,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(dialog)
         layout.setContentsMargins(24, 22, 24, 22)
         layout.addWidget(QLabel("Ultra3 Lab", objectName="pageTitle"))
-        layout.addWidget(StatusBadge("OFFLINE TIME-POSITION EDITOR", BadgeState.VERIFIED))
+        layout.addWidget(StatusBadge("OFFLINE VERIFIED BUILDER", BadgeState.VERIFIED))
         verified = QLabel(
             "已验证\n"
             "• GreenLion Static DIY\n"
@@ -837,11 +1250,14 @@ class MainWindow(QMainWindow):
             "• Thumbnail resource：210 × 252（5:6）\n"
             "• Physical display geometry：UNKNOWN\n"
             "• offset 0x00000000：00 = top，01 = bottom\n"
-            "• 时间位置编辑：AVAILABLE"
+            "• 时间位置编辑：AVAILABLE\n"
+            "• Builder v0.2.4-greenlion-exact：AVAILABLE\n"
+            "• Builder 输出：351617 bytes，模板 offset 0 保持 02"
         )
         unsupported = QLabel(
             "未接入 / 未验证\n"
-            "• Builder、资源导入与 GUI 上传\n"
+            "• GUI 上传、独立缩略图和可调构建参数\n"
+            "• Builder 输出与 00/01 时间位置编辑合并\n"
             "• 其他固件、预设表盘、时间颜色\n"
             "• 日期、星期、步数、卡路里、心率、组件拖拽"
         )

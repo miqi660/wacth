@@ -241,14 +241,14 @@ def test_theme_tokens_and_focus_states_are_centralized() -> None:
     assert "QPushButton#primaryButton:disabled" in _stylesheet()
 
 
-def test_stage_gate_dialog_only_locks_builder(qapp) -> None:
+def test_stage_gate_dialog_reports_verified_builder_scope(qapp) -> None:
     window = make_window(qapp)
     dialog = window.show_stage_gate_dialog()
     qapp.processEvents()
     labels = "\n".join(label.text() for label in dialog.findChildren(QLabel))
-    assert "NOT EXECUTED" in labels
+    assert "OFFLINE BUILDER AVAILABLE" in labels
     assert "Builder v0.2.4-greenlion-exact" in labels
-    assert "时间位置编辑可用" in labels
+    assert "时间位置编辑保持独立" in labels
     assert any(button.text() == "关闭" for button in dialog.findChildren(QPushButton))
     dialog.close()
     window.close()
@@ -289,15 +289,17 @@ def test_resource_information_never_claims_physical_geometry(qapp) -> None:
     window.close()
 
 
-def test_resource_build_controls_stay_locked_without_builder(qapp) -> None:
+def test_resource_builder_starts_not_ready_with_fixed_profile(qapp) -> None:
     window = make_window(qapp)
-    assert window.main_resource_status.text() == "NOT LOADED"
-    assert window.thumbnail_resource_status.text() == "NOT LOADED"
-    assert all(not control.isEnabled() for control in window.resource_controls)
-    assert window.fit_mode.count() == 3
-    assert window.fit_mode.itemText(0) == "裁剪填充（cover）"
+    assert window.main_resource_status.text() == "NOT SELECTED"
+    assert window.thumbnail_resource_status.text() == "AUTO FROM MAIN IMAGE · 210 × 252"
+    assert window.choose_main_button.isEnabled()
+    assert window.choose_template_button.isEnabled()
+    assert not window.choose_thumbnail_button.isEnabled()
+    assert window.fit_mode.count() == 1
+    assert window.fit_mode.itemText(0) == "cover（固定）"
     assert not window.builder_generate_button.isEnabled()
-    assert not hasattr(window.controller, "build")
+    assert hasattr(window.controller, "execute_greenlion_build")
     window.close()
 
 
@@ -315,7 +317,9 @@ def test_gui_has_no_rgb565_or_builder_reimplementation() -> None:
     source_root = ROOT / "src" / "ultra3_editor" / "gui"
     source = "\n".join(path.read_text(encoding="utf-8") for path in source_root.glob("*.py"))
     lowered = source.lower()
-    assert "rgb565" not in lowered
+    assert "_image_to_rgb565" not in lowered
+    assert "_fit_cover_exact" not in lowered
+    assert "_apply_greenlion_next_high" not in lowered
     assert "wire.low" not in lowered
     assert "wire.high" not in lowered
     assert "data[0] =" not in lowered

@@ -67,11 +67,12 @@ bilinear、truncate RGB565、`greenlion-next-high`，并从同一图片分别生
 字节原样保留，offset 0 保持 `02`。
 
 BIN、JSON 和 Markdown 均独占创建，任一失败会清理本次调用创建的文件。第一版不提供覆盖、
-时间位置、独立缩略图、其他 fit 或编码配置，也不接入 GUI 和外部设备。
+时间位置、独立缩略图、其他 fit 或编码配置，也不接入外部设备。Stage 8B-2 的 GUI 只包装
+这一公共入口，不复制图像编码或 BIN 布局逻辑。
 
 ## Ultra3 Lab 离线 GUI
 
-Stage 8A.2 提供 PyQt6 深色离线时间位置编辑 GUI：
+Stage 8A.2/8B-2 提供 PyQt6 深色离线时间位置编辑与 GreenLion Static Builder GUI：
 
 ```powershell
 python -m pip install ".[gui]"
@@ -82,7 +83,12 @@ GUI 通过 `OfflineGuiController` 调用 Stage 7B-1 `set_time_position()`，支�
 新输出路径及可选 JSON/Markdown，并展示写后复验和黄金匹配。GUI 不读取或 patch BIN 字节，
 不覆盖输入或已有输出，不导入 uploader，也不提供 BLE、adb、Frida 或上传功能。
 
+Builder 区域通过同一 Controller 单次调用公开的 `build_greenlion_static_diy()`：选择 PNG/JPEG、
+已验证模板、新 BIN 及可选 JSON/Markdown，显示固定 exact profile、源图片确认预览、自动缩略图
+状态、结构化错误与结果 SHA。预览只是 Qt 等比例选图预览，不代表最终裁剪、编码或设备显示效果。
+构建输出保持模板 offset 0=`02`，不会自动加载到只接受 `00/01` 的时间位置编辑流程。
+
 静态 DIY 资源预览使用两个独立的已验证画布：主图 `320 × 384`、缩略图 `210 × 252`，
 比例均为 `5:6`。它们是资源尺寸，不是物理屏幕分辨率；物理显示几何与可见区域均为
-`UNKNOWN`。Builder 公共核心尚未接入 GUI，因此图片导入、适配、RGB565 编码、缩略图生成
-和完整表盘构建继续硬禁用；时间位置 BIN 编辑与资源制作在界面中明确区分。
+`UNKNOWN`。GUI 不提供独立缩略图、可调 fit/编码参数或上传；时间位置 BIN 编辑与完整表盘
+构建在界面与状态模型中保持隔离。

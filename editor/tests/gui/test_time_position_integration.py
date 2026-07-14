@@ -94,7 +94,10 @@ def test_controller_execute_calls_public_core_once(
         calls.append(kwargs)
         return expected
 
-    monkeypatch.setattr("ultra3_editor.gui.controllers.set_time_position", fake_set_time_position)
+    monkeypatch.setattr(
+        "ultra3_editor.gui.controllers.execute_time_position_core",
+        fake_set_time_position,
+    )
     assert controller.execute_time_position_edit(plan) is expected
     assert calls == [
         {
@@ -455,12 +458,14 @@ def test_gui_source_has_no_direct_bin_editing_or_external_calls() -> None:
     assert not any(name.startswith(("bleak", "ultra3_uploader", "subprocess")) for name in imported)
 
 
-def test_builder_and_resource_controls_remain_locked(qapp) -> None:
+def test_builder_availability_does_not_change_time_position_export(qapp) -> None:
     window = make_window(qapp)
     window.load_file(TOP, show_error=False)
-    assert all(not control.isEnabled() for control in window.resource_controls)
+    assert window.choose_main_button.isEnabled()
+    assert window.choose_template_button.isEnabled()
+    assert not window.choose_thumbnail_button.isEnabled()
     assert not window.builder_generate_button.isEnabled()
-    assert window.builder_status.text() == "NOT AVAILABLE"
+    assert window.builder_status.text() == "AVAILABLE"
     assert window.generate_button.text() == "生成新 BIN"
     window.close()
 

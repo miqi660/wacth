@@ -1,0 +1,68 @@
+{
+  "status": "COMPLETE",
+  "builder_version": "0.2.4-greenlion-exact",
+  "container": "greenlion-static",
+  "firmware_scope": "NJ-LEJ-2.1.7",
+  "image_path": "1.JPG",
+  "image_format": "JPEG",
+  "image_size": 2098803,
+  "image_sha256_before": "9FDBB04E9DD910296B44BECB98C25A0C988A4B1B98EC0DAE12A0E831BC747CB4",
+  "image_sha256_after": "9FDBB04E9DD910296B44BECB98C25A0C988A4B1B98EC0DAE12A0E831BC747CB4",
+  "image_unchanged": true,
+  "template_path": "official_calibration_351617.bin",
+  "template_size": 351617,
+  "template_sha256_before": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC",
+  "template_sha256_after": "5D04DE76C94DA9D7F7069AF3E6038E1575D3B42E5E009EAD590CE4DD33F5E1CC",
+  "template_unchanged": true,
+  "template_header_hex": "02 00 00 FF FF FF 00 00 80 01 40 01 FC 00 D2 00 00",
+  "template_header_preserved": true,
+  "template_offset_zero": 2,
+  "output_path": "golden_match.bin",
+  "output_size": 351617,
+  "output_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+  "output_revalidated": true,
+  "main_resource_size": [
+    320,
+    384
+  ],
+  "thumbnail_resource_size": [
+    210,
+    252
+  ],
+  "fit_mode": "cover",
+  "thumbnail_mode": "auto-from-main",
+  "resample": "bilinear",
+  "quantize": "truncate",
+  "wire_profile": "greenlion-next-high",
+  "preblur": 0.0,
+  "replaced_regions": [
+    {
+      "name": "main",
+      "start": 17,
+      "end": 245777,
+      "length": 245760
+    },
+    {
+      "name": "thumbnail",
+      "start": 245777,
+      "end": 351617,
+      "length": 105840
+    }
+  ],
+  "determinism_status": "not_evaluated",
+  "repeated_build_sha256": null,
+  "golden_status": "match",
+  "exact_golden_match": true,
+  "golden_target_sha256": "44B4893ACF6244119DE655B32C1CE760048F3128A24489B49FF24F7BB60FA664",
+  "external_usage": {
+    "hardware_initializations": 0,
+    "hardware_scans": 0,
+    "hardware_connections": 0,
+    "hardware_writes": 0,
+    "external_processes": 0,
+    "network_operations": 0,
+    "real_uploads": 0
+  },
+  "warnings": [],
+  "errors": []
+}
