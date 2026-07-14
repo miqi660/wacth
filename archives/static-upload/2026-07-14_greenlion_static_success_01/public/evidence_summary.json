@@ -1,0 +1,71 @@
+﻿{
+    "stage":  "8C-2",
+    "result":  "PASS",
+    "evidence_type":  "sanitized_public_summary",
+    "target":  {
+                   "watch":  "Ultra3",
+                   "firmware":  "NJ-LEJ-2.1.7",
+                   "app_package":  "com.pow.greenlionplus"
+               },
+    "transport":  {
+                      "service_uuid":  "000001ff-3c17-d293-8e48-14fe2e4da212",
+                      "write_characteristic":  "FF02",
+                      "notify_characteristic":  "FF03",
+                      "att_handle":  "0x0062",
+                      "att_opcode":  "0x52",
+                      "mtu":  247
+                  },
+    "source_watchface":  {
+                             "size":  351617,
+                             "sha256":  "44b4893acf6244119de655b32c1ce760048f3128a24489b49ff24f7bb60fa664"
+                         },
+    "c9_payload":  {
+                       "size":  353146,
+                       "sha256":  "19c1b72da080c5f23d0978ff7c93dbd10f8e07d6eaaeff4e3c4d08608e31bcf5"
+                   },
+    "binder_capture":  {
+                           "layer":  "android.bluetooth.IBluetoothGatt$Stub$Proxy.writeCharacteristic",
+                           "total_writes":  1531,
+                           "c9_writes":  1529,
+                           "unique_sequences":  1529,
+                           "sequence_range":  "0..1528",
+                           "missing":  0,
+                           "duplicates":  0,
+                           "differing_duplicates":  0,
+                           "checksum_failures":  0,
+                           "reconstructed_size":  353146,
+                           "reconstructed_sha256":  "19c1b72da080c5f23d0978ff7c93dbd10f8e07d6eaaeff4e3c4d08608e31bcf5",
+                           "exact_match":  true,
+                           "first_diff":  -1,
+                           "differing_bytes":  0
+                       },
+    "packet_sizing":  {
+                          "normal_frame_count":  1528,
+                          "normal_frame_length":  237,
+                          "normal_region_length":  231,
+                          "final_frame_length":  184,
+                          "final_region_length":  178,
+                          "reconstruction_formula":  "1528 * 231 + 178 = 353146"
+                      },
+    "hci_capture":  {
+                        "valid_btsnoop":  true,
+                        "datalink_type":  1002,
+                        "total_records":  3821,
+                        "acl_records":  2607,
+                        "ff02_write_commands":  1600,
+                        "c9_markers":  1529,
+                        "ca_observed_after_c9":  true
+                    },
+    "real_device_confirmation":  {
+                                     "app_reported_success":  true,
+                                     "watch_display_confirmed":  true
+                                 },
+    "excluded_private_evidence":  [
+                                      "raw HCI capture",
+                                      "Android bugreport",
+                                      "Bluetooth addresses",
+                                      "complete source BIN",
+                                      "complete reconstructed payload",
+                                      "device-specific logs"
+                                  ]
+}
